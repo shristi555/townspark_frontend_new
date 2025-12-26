@@ -8,8 +8,12 @@ import { LoginForm } from "@/components/login-form";
 import logo from "@public/logo.png";
 import AuthService from "@/services/auth_service";
 import React from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+	const router = useRouter();
+
 	async function handleSubmit(event) {
 		event.preventDefault();
 		const formData = new FormData(event.target);
@@ -17,31 +21,15 @@ export default function LoginPage() {
 		const email = formData.get("email");
 		const password = formData.get("password");
 
-		// Validate the data before sending
-		const validationErrors = AuthService.validateLoginData({
-			email,
-			password,
-		});
-		if (validationErrors) {
-			setErrors(validationErrors);
-			return;
-		}
-
 		try {
 			const response = await AuthService.login(email, password);
 			console.log("Login successful:", response);
-			// Redirect or perform other actions here
+
+			toast.success("Login successful!");
+			router.push("/me");
 		} catch (error) {
 			console.error("Login failed:", error);
-
-			// the error can be a string or an object with field-specific errors
-			if (typeof error === "string") {
-				setErrors({ unexpected: [error] });
-			} else if (typeof error === "object") {
-				setErrors(error);
-			} else {
-				setErrors({ unexpected: ["An unknown error occurred"] });
-			}
+			setErrors(error);
 		}
 	}
 

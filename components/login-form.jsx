@@ -19,6 +19,10 @@ export function LoginForm({ className, ...props }) {
 					Enter your email below to login to your account
 				</p>
 			</div>
+			<div className='error text-red-600'>
+				{validationError?.unexpected &&
+					validationError.unexpected.join(", ")}
+			</div>
 			<div className='grid gap-6'>
 				<div className='grid gap-2'>
 					<Label htmlFor='email'>Email</Label>

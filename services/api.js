@@ -13,7 +13,7 @@ const api = axios.create({
 
 function handleSuccessResponse(response) {
 	const gotData = response.data;
-	console.log("API Response:", gotData);
+	// console.log("API Response:", gotData);
 
 	if (typeof gotData?.success !== "boolean") {
 		return Promise.reject("Invalid response format");
