@@ -1,7 +1,5 @@
-import React from "react";
+import { ComponentExample } from "@/components/component-example";
 
-function HomePage() {
-	return <div className='bg-primary'>HomePage</div>;
+export default function Page() {
+return <ComponentExample />;
 }
-
-export default HomePage;

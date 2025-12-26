@@ -71,7 +71,8 @@ const AuthService = {
 				errors[field] = "this field cannot be empty";
 			}
 		}
-		return errors;
+		//  if error is null return true else return errors
+		return Object.keys(errors).length === 0 ? null : errors;
 	},
 
 	/// tokens are auto generated and sent as cookies during login and register

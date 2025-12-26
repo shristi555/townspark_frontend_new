@@ -23,12 +23,14 @@ function handleSuccessResponse(response) {
 		return Promise.reject(gotData.error || "Something went wrong");
 	}
 
-	return gotData.response;
+	return gotData;
 }
 
 async function handleErrorResponse(error) {
 	const originalRequest = error.config;
 	const response = error?.response;
+
+	console.error("API Error Response:", response);
 
 	if (!response || !response.data) {
 		return Promise.reject("Network error or server not reachable");
