@@ -44,6 +44,8 @@ These are trusted individuals who help manage the platform. They have all the po
 - **Delete Any Issue**: Can remove inappropriate or duplicate reports
 - **Monitor Platform**: Keep an eye on the overall health of the community reporting system
 
+Please note that admins do NOT directly fix issues themselves; they act as intermediaries between residents and local authorities. This is a issue REPORTING platform, not a problem FIXING platform.
+
 ### Important Permission Rules
 
 - **Deleting Issues**: Only the person who reported an issue OR an admin can delete it

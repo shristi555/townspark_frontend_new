@@ -10,6 +10,50 @@ module.exports = {
 	plugins: [require("tailwindcss-animate")],
 	theme: {
 		extend: {
+			colors: {
+				// Primary brand colors
+				primary: "#0da6f2",
+				"primary-dark": "#0b8fd1",
+				"primary-light": "#3eb8f5",
+
+				// Secondary/Accent colors
+				accent: "#FFA500",
+				secondary: "#00A99D",
+
+				// Background colors
+				"background-light": "#f5f7f8",
+				"background-dark": "#101c22",
+
+				// Card colors
+				"card-light": "#ffffff",
+				"card-dark": "#1a2831",
+
+				// Text colors
+				"text-primary-light": "#0d171c",
+				"text-primary-dark": "#f5f7f8",
+				"text-secondary-light": "#6C757D",
+				"text-secondary-dark": "#A8B5C0",
+
+				// Border colors
+				"border-light": "#cee0e8",
+				"border-dark": "#334155",
+
+				// Status colors
+				"status-reported": "#DC3545",
+				"status-acknowledged": "#3A86FF",
+				"status-progress": "#FFC107",
+				"status-resolved": "#28A745",
+
+				// Urgency colors
+				"urgency-low": "#50E3C2",
+				"urgency-medium": "#F5A623",
+				"urgency-high": "#D0021B",
+
+				// Neutral colors for admin
+				"neutral-text": "#424242",
+				"neutral-bg": "#F7FAFC",
+				"neutral-border": "#E2E8F0",
+			},
 			borderRadius: {
 				lg: "var(--radius)",
 				md: "calc(var(--radius) - 2px)",

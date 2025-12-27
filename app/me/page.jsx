@@ -257,7 +257,7 @@ function ProfileDetails({ userInfo }) {
 				))}
 			</div>
 			<div className='mt-6 sm:mt-8 pt-6 border-t border-border-light dark:border-border-dark flex flex-col sm:flex-row gap-3'>
-				<button className='flex-1 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95'>
+				<button className='flex-1 bg-primary-foreground/40 hover:bg-primary-foreground text-white font-medium py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95'>
 					Edit Profile
 				</button>
 				<button className='flex-1 bg-neutral-bg dark:bg-gray-800 hover:bg-neutral-border dark:hover:bg-gray-700 text-text-primary-light dark:text-text-primary-dark font-medium py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95 border border-border-light dark:border-border-dark'>
