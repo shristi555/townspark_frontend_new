@@ -8,30 +8,42 @@ import {
 	Home,
 	Mail,
 	AlertCircle,
-	Wifi,
 	WifiOff,
 	Gamepad2,
-	X,
+	Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ErrorAnimation from "@/components/error/error-animation";
 import MiniGame from "@/components/error/mini-game";
-import BackendService from "@/services/backend_service";
-import { useRetryUntilOnline } from "@/hooks/retry";
-import { StopCircle } from "lucide-react";
+import { useServerRetry } from "@/hooks/server";
 
 export default function ErrorPage() {
 	const router = useRouter();
-	const [isRetrying, setIsRetrying] = useState(false);
 	const [showGame, setShowGame] = useState(false);
-	// const [retryCount, setRetryCount] = useState(0);
+	const { retryCount, isRetrying, nextRetryIn, manualRetry } =
+		useServerRetry();
 
-	const { retryCount, handleRetry, startRetry, stopRetry } =
-		useRetryUntilOnline();
+	// useEffect(() => {
+	// 	// Start auto-retry when page loads
+	// 	startAutoRetry();
+	// }, [startAutoRetry]);
+
+	const handleManualRetry = async () => {
+		const isOnline = await manualRetry();
+		if (isOnline) {
+			router.push("/");
+		}
+	};
+
+	const formatTime = (ms) => {
+		if (!ms) return "0s";
+		const seconds = Math.ceil(ms / 1000);
+		return `${seconds}s`;
+	};
 
 	return (
-		<div className='min-h-screen  from-orange-50 via-background to-orange-50/50  dark:via-background flex items-center justify-center p-4'>
+		<div className='min-h-screen bg-gradient-to-br from-orange-50 via-background to-orange-50/50 dark:from-gray-900 dark:via-background dark:to-gray-900 flex items-center justify-center p-4'>
 			{/* Background Pattern */}
 			<div className='absolute inset-0 overflow-hidden pointer-events-none'>
 				<div className='absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl animate-pulse' />
@@ -56,31 +68,50 @@ export default function ErrorPage() {
 								</h1>
 								<p className='text-muted-foreground text-lg max-w-md mx-auto leading-relaxed'>
 									Our servers are currently taking a short
-									break.
-								</p>
-								<p className='text-muted-foreground text-lg max-w-md mx-auto leading-relaxed'>
-									We will redirect you automatically once
-									server is back online.
+									break. We are working hard to get Townspark
+									back online so you can keep improving your
+									community.
 								</p>
 							</div>
 
 							{/* Retry Stats */}
 							{retryCount > 0 && (
-								<div className='text-center'>
-									<p className='text-sm text-muted-foreground'>
-										Retry status:{" "}
-										<span className='inline font-mono font-bold'>
-											{" "}
-											Unsuccessful{" "}
-										</span>
-									</p>
+								<div className='text-center space-y-2'>
+									<div className='flex items-center justify-center gap-4 text-sm flex-wrap'>
+										<div className='flex items-center gap-2'>
+											<AlertCircle className='w-4 h-4 text-muted-foreground' />
+											<span className='text-muted-foreground'>
+												Retry attempts:
+											</span>
+											<span className='font-semibold'>
+												{retryCount}
+											</span>
+										</div>
+										{isRetrying && nextRetryIn && (
+											<div className='flex items-center gap-2'>
+												<Clock className='w-4 h-4 text-muted-foreground' />
+												<span className='text-muted-foreground'>
+													Next retry in:
+												</span>
+												<span className='font-semibold'>
+													{formatTime(nextRetryIn)}
+												</span>
+											</div>
+										)}
+									</div>
+									{isRetrying && (
+										<p className='text-xs text-muted-foreground'>
+											Automatically checking server
+											status...
+										</p>
+									)}
 								</div>
 							)}
 
 							{/* Action Buttons */}
 							<div className='flex flex-col sm:flex-row gap-3'>
 								<Button
-									onClick={handleRetry}
+									onClick={handleManualRetry}
 									disabled={isRetrying}
 									size='lg'
 									className='flex-1 group'
@@ -93,18 +124,18 @@ export default function ErrorPage() {
 									) : (
 										<>
 											<RefreshCw className='w-5 h-5 mr-2 group-hover:rotate-180 transition-transform duration-500' />
-											Retry Connection
+											Retry Now
 										</>
 									)}
 								</Button>
 								<Button
-									variant='destructive'
+									variant='outline'
 									size='lg'
-									onClick={stopRetry}
+									onClick={() => router.push("/")}
 									className='flex-1'
 								>
-									<StopCircle className='w-5 h-5 mr-2' />
-									Stop Retrying
+									<Home className='w-5 h-5 mr-2' />
+									Go Home
 								</Button>
 							</div>
 

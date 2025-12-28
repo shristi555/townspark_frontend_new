@@ -46,7 +46,7 @@ export function useRetryUntilOnline() {
 				router.replace(
 					(fromRoute == "/error" ? "/" : fromRoute) || "/"
 				); // go back to original route
-				clearInterval(interval); // stop retrying
+				clearInterval(intervalId); // stop retrying
 			}
 		} catch (err) {
 			setStatus("unsuccessful");

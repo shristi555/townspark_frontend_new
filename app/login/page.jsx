@@ -10,8 +10,12 @@ import AuthService from "@/services/auth_service";
 import React from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useNoAuth } from "@/hooks/auth-check";
+import { useEnsureServerOnline } from "@/hooks/server";
 
 export default function LoginPage() {
+	const { loading } = useNoAuth();
+
 	const router = useRouter();
 
 	async function handleSubmit(event) {
@@ -34,6 +38,10 @@ export default function LoginPage() {
 	}
 
 	const [errors, setErrors] = React.useState(null);
+
+	if (loading) {
+		return <div> Checking authentication...</div>;
+	}
 
 	return (
 		<div className='grid min-h-svh lg:grid-cols-2'>

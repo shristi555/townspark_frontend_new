@@ -75,6 +75,9 @@ async function handleErrorResponse(error) {
 		type: extractedError?.type,
 		message: extractedError?.message,
 		message_type: extractedError?.message_type,
+		reached_server: extractedError.reached_server || false,
+		status: error?.response?.status,
+	
 	});
 }
 

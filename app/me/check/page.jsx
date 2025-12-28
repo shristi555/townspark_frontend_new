@@ -9,6 +9,7 @@ export default function ValidatePage() {
 
 	async function verifyToken() {
 		const token = await AuthService.verifyToken();
+		console.log("Token verification result:", token);
 		if (token.success) {
 			toast.success("You are already logged in");
 			setIsLoggedIn(true);

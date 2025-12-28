@@ -13,9 +13,10 @@ import { useRouter } from "next/navigation";
 import SignupForm from "@/components/signup-form";
 import BackendService from "@/services/backend_service";
 import { useEnsureServerOnline } from "@/hooks/server";
+import { useNoAuth } from "@/hooks/auth-check";
 
 export default function SignupPage() {
-	useEnsureServerOnline();
+	const { loading } = useNoAuth();
 
 	const router = useRouter();
 
@@ -41,6 +42,10 @@ export default function SignupPage() {
 	}
 
 	const [errors, setErrors] = React.useState(null);
+
+	if (loading) {
+		return <div> Checking authentication...</div>;
+	}
 
 	return (
 		<div className='grid min-h-svh lg:grid-cols-2'>
