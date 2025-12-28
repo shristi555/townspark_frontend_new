@@ -24,12 +24,15 @@ export default function SignupPage() {
 			return setErrors(errors);
 		}
 
-		const resp = await AuthService.register(formData);
-		if (resp.success && resp.status === 201) {
-			toast.success("Registration successful! Please log in.");
-			router.push("/login");
-		} else {
-			setErrors(resp.errors);
+		try {
+			const resp = await AuthService.register(formData);
+			if (resp.success && resp.status === 201) {
+				toast.success("Registration successful! Please log in.");
+				router.push("/login");
+			}
+		} catch (error) {
+			console.error("Registration failed:", error);
+			setErrors(error.message);
 		}
 	}
 

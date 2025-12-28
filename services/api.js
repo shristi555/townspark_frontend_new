@@ -27,36 +27,55 @@ function handleSuccessResponse(response) {
 }
 
 async function handleErrorResponse(error) {
-	const originalRequest = error.config;
-	const response = error?.response;
+	/*
+	The backend is consistent in sending the error responses in the format:
+	{
+		success: false,
+		error: {
+			type : <error type like 'validation_error' but dont rely on it just yet>,	
+			message: <the error message can be string or object>,
+			message_type : <especifies what type of message it is like 'string' or 'list' or 'object' this is quite reliable then the 'type' field it was extracted using pythons type() function so string maybe called 'str' or 'string' etc be aware>,
+		}
+	}
 
-	console.error("API Error Response:", response);
+	We now have a consistent format for error responses too, so we can parse them accordingly.
+
+	*/
+
+	const response = error?.response;
+	console.log("API Error Response:", response);
 
 	if (!response || !response.data) {
 		return Promise.reject("Network error or server not reachable");
 	}
 
-	const data = response.data;
+	const recieveeData = response.data;
 
-	if (typeof data.success !== "boolean") {
+	if (typeof recieveeData.success !== "boolean") {
 		return Promise.reject("Invalid error response format");
 	}
 
-	if (data.error) {
-		if (typeof data.error === "string") {
-			return Promise.reject(data.error);
-		}
-
-		if (typeof data.error === "object") {
-			if (data.error.message) {
-				return Promise.reject(data.error.message);
-			}
-
-			return Promise.reject(JSON.stringify(data.error));
-		}
+	// it will always be a object here
+	let extractedError;
+	if (recieveeData.success === false) {
+		extractedError = recieveeData.error;
 	}
 
-	return Promise.reject("Unexpected server error");
+	// let errorMessage = "An error occurred";
+	// if (extractedError) {
+	// 	if (typeof extractedError.message === "string") {
+	// 		errorMessage = extractedError.message;
+	// 	} else if (typeof extractedError.message === "object") {
+	// 		// dont hassle anything just stringify it and return
+	// 		errorMessage = JSON.stringify(extractedError.message);
+	// 	}
+	// }
+
+	return Promise.reject({
+		type: extractedError?.type,
+		message: extractedError?.message,
+		message_type: extractedError?.message_type,
+	});
 }
 
 api.interceptors.response.use(handleSuccessResponse, handleErrorResponse);
