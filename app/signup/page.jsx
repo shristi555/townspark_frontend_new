@@ -11,8 +11,12 @@ import React from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import SignupForm from "@/components/signup-form";
+import BackendService from "@/services/backend_service";
+import { useEnsureServerOnline } from "@/hooks/server";
 
 export default function SignupPage() {
+	useEnsureServerOnline();
+
 	const router = useRouter();
 
 	async function handleSubmit(event) {
