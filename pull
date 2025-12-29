@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+git pull || { echo "Failed to pull the latest changes"; exit 1; }
+pnpm install || { echo "Failed to install dependencies"; exit 1; }
+
+echo "Project and dependencies have been updated."
+
+exit 0
