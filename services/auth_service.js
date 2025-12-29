@@ -7,29 +7,10 @@ const urls = {
 	REFRESH: "/auth/token/refresh/",
 	VERIFY: "/auth/token/verify/",
 	LOGOUT: "/auth/logout/",
+	UPDATE_PROFILE: "/auth/me/update/",
 };
 
-const AuthService = {
-	login(email, password) {
-		return api.post(urls.LOGIN, {
-			email: email,
-			password: password,
-		});
-	},
-
-	register(formData) {
-		// Convert FormData to object
-		const data = Object.fromEntries(formData.entries());
-
-		return api.post(urls.REGISTER, {
-			first_name: data.first_name,
-			last_name: data.last_name,
-			email: data.email,
-			password: data.password,
-			phone_number: data.phone_number || null,
-		});
-	},
-
+const AuthDataValidators = {
 	validateRegisterData(formData) {
 		// Convert FormData to plain object
 		const data = Object.fromEntries(formData.entries());
@@ -85,6 +66,32 @@ const AuthService = {
 
 		return Object.keys(errors).length === 0 ? null : errors;
 	},
+};
+
+const AuthService = {
+	urls: urls,
+	// Kept for backward compatibility
+	...AuthDataValidators,
+
+	login(email, password) {
+		return api.post(urls.LOGIN, {
+			email: email,
+			password: password,
+		});
+	},
+
+	register(formData) {
+		// Convert FormData to object
+		const data = Object.fromEntries(formData.entries());
+
+		return api.post(urls.REGISTER, {
+			first_name: data.first_name,
+			last_name: data.last_name,
+			email: data.email,
+			password: data.password,
+			phone_number: data.phone_number || null,
+		});
+	},
 
 	refreshToken() {
 		return api.post(urls.REFRESH);
@@ -101,6 +108,14 @@ const AuthService = {
 	logout() {
 		return api.post(urls.LOGOUT);
 	},
+	updateProfile(formData) {
+		// Convert FormData to object
+		const data = Object.fromEntries(formData.entries());
+
+		return api.put(urls.UPDATE_PROFILE, data);
+	},
 };
 
 export default AuthService;
+
+/// For additional me or profile releted tasks are also in profile_service.js

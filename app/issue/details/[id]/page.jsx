@@ -12,6 +12,7 @@ export default function IssueDetailsPage() {
 	const router = useRouter();
 	const [issue, setIssue] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [myUserId, setMyUserId] = useState(null);
 
 	useEffect(() => {
 		const fetchIssueDetails = async () => {
@@ -19,6 +20,9 @@ export default function IssueDetailsPage() {
 				const response = await IssueService.getIssueDetails(params.id);
 				if (response.success) {
 					setIssue(response.response);
+					if (response.response.requesting_user_id) {
+						setMyUserId(response.response.requesting_user_id);
+					}
 				}
 			} catch (error) {
 				console.error("Error fetching issue details:", error);
@@ -36,6 +40,22 @@ export default function IssueDetailsPage() {
 
 	const handleBack = () => {
 		router.back();
+	};
+
+	const handleDelete = async () => {
+		try {
+			await IssueService.deleteIssue(params.id);
+			toast.success("Issue deleted successfully");
+			router.push("/issue/mine");
+		} catch (error) {
+			console.error("Error deleting issue:", error);
+			toast.error("Failed to delete issue");
+		}
+	};
+
+	const handleDeleteCancel = () => {
+		// No action needed, dialog will close automatically
+		toast.info("Issue deletion cancelled");
 	};
 
 	const handleAddComment = async (comment) => {
@@ -87,6 +107,9 @@ export default function IssueDetailsPage() {
 	return (
 		<IssueDetails
 			issue={issue}
+			requesting_user_id={myUserId}
+			onDeleteIssue={handleDelete}
+			onDeleteCancel={handleDeleteCancel}
 			onBack={handleBack}
 			onAddComment={handleAddComment}
 			onToggleLike={handleToggleLike}
