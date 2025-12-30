@@ -3,109 +3,62 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import AuthService from "@/services/auth_service";
+import useAuthStore from "@stores/auth_store";
 
 /**
- * Hook for pages that require NO authentication (login, signup, etc.)
- * Redirects to home if user is already authenticated
- * Redirects to /error if server is offline
+ * Pages that should NOT be accessed when logged in
+ * Example: login, register
  */
 export function useNoAuth() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
+	const router = useRouter();
+	const { checkAuthStatus } = useAuthStore();
+	const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const response = await AuthService.verifyToken();
+	useEffect(() => {
+		(async function () {
+			const result = await checkAuthStatus();
 
-        // User is authenticated, redirect to home
-        if (response.success) {
-          toast.warning("You are already logged in");
-          router.push("/");
-        }
-      } catch (error) {
-        // the error we get is refined from the interceptors
-        // so we cannot expect that there will be status in error directly
-        // but luckily the backend provides status in error so we can use that
-        // backend never sends backend key in error
-        // so using .response is a bug here
-        // but backend gives a key called reached_server to indicate if server was reached or not
-        // so that is a better way to check for server errors
-        // final plan
-        // if error.reached_server is false or null or undefined, then it's a server/network error
-        // else it's a client error (401, 403, etc.)
+			if (result?.ok) {
+				toast.warning("You are already logged in");
+				router.push("/");
+			}
 
-        // Check if it's a server/network error
+			if (result?.reason === "server") {
+				router.push("/error");
+			}
 
-        // if its a 401 error or other client error, we do nothing
-        if (error.status === 401) {
-          // User is not authenticated (expected)
-          console.log("User not authenticated, staying on page");
-          return;
-        }
+			setLoading(false);
+		})();
+	}, [router, checkAuthStatus]);
 
-        console.log(`GOt error in useNoAuth: `, error);
-
-        if (!error.reached_server) {
-          // Server is offline or erroring
-          router.push("/error");
-          return;
-        }
-
-        //  other client errors mean user is not authenticated (expected)
-        // Do nothing, let them stay on the page
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    checkAuth();
-  }, [router]);
-
-  return { loading };
+	return { loading };
 }
 
 /**
- * Hook for pages that REQUIRE authentication (dashboard, profile, etc.)
- * Redirects to login if user is not authenticated
- * Redirects to /error if server is offline
+ * Pages that REQUIRE authentication
+ * Example: dashboard, profile
  */
 export function useNeedAuth() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
+	const router = useRouter();
+	const { checkAuthStatus } = useAuthStore();
+	const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const response = await AuthService.verifyToken();
+	useEffect(() => {
+		(async function () {
+			const result = await checkAuthStatus();
 
-        // User is not authenticated
-        if (!response.success) {
-          toast.warning("Please login to continue");
-          router.push("/login");
-        }
-      } catch (error) {
-        console.log(`GOt error in useNeedAuth: `, error);
+			if (!result?.ok) {
+				if (result?.reason === "server") {
+					router.push("/error");
+				} else {
+					toast.warning("Please login to continue");
+					router.push("/login");
+				}
+			}
 
-        // Check if it's a server/network error
-        if (!error.reached_server) {
-          router.push("/error");
-          return;
-        }
+			setLoading(false);
+		})();
+	}, [router, checkAuthStatus]);
 
-        // 401 means not authenticated, redirect to login
-        if (error.status === 401) {
-          toast.warning("Please login to continue");
-          router.push("/login");
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    checkAuth();
-  }, [router]);
-
-  return { loading };
+	return { loading };
 }

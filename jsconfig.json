@@ -3,7 +3,9 @@
 		"paths": {
 			"@/*": ["./*"],
 			"@services/*": ["./services/*"],
-			"@public/*": ["./public/*"]
+			"@public/*": ["./public/*"],
+			"@stores/*": ["./store/*"]
 		}
 	}
 }
+	

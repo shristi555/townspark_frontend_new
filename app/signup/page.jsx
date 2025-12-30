@@ -14,69 +14,62 @@ import SignupForm from "@/components/signup-form";
 import BackendService from "@/services/backend_service";
 import { useEnsureServerOnline } from "@/hooks/server";
 import { useNoAuth } from "@/hooks/auth-check";
+import useAuthStore from "@/store/auth_store";
 
 export default function SignupPage() {
-  const { loading } = useNoAuth();
+	const { loading } = useNoAuth();
 
-  const router = useRouter();
+	const { errors, register, isLoading, isAuthenticated } = useAuthStore();
 
-  function clearErrors() {
-    setErrors(null);
-  }
+	const router = useRouter();
 
-  async function handleSubmit(event) {
-    clearErrors();
-    event.preventDefault();
-    const formData = new FormData(event.target);
+	function clearErrors() {
+		setErrors(null);
+	}
 
-    const errors = AuthService.validateRegisterData(formData);
-    if (errors) {
-      return setErrors(errors);
-    }
+	async function handleSubmit(event) {
+		clearErrors();
+		event.preventDefault();
+		const formData = new FormData(event.target);
 
-    try {
-      const resp = await AuthService.register(formData);
-      console.log("Registration response:", resp);
-      if (resp.success) {
-        toast.success("Registration successful! Please log in.");
-        router.push("/login");
-      }
-    } catch (error) {
-      console.error("Registration failed:", error);
-      setErrors(error.message);
-    }
-  }
+		const result = await register(formData);
 
-  const [errors, setErrors] = React.useState(null);
+		if (result.success) {
+			router.push("/me");
+		}
+	}
 
-  if (loading) {
-    return <div> Checking authentication...</div>;
-  }
+	if (isLoading) {
+		return <div> Checking authentication...</div>;
+	}
 
-  return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Image src={logo} alt="Logo" />
-            </div>
-            <span className="font-bold text-xl">Townspark</span>
-          </a>
-        </div>
-        <div className="flex flex-3 items-center justify-center">
-          <div className="w-full max-w-xs">
-            <SignupForm onSubmit={handleSubmit} validationError={errors} />
-          </div>
-        </div>
-      </div>
-      <div className="relative flex-1 hidden bg-muted lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
-      </div>
-    </div>
-  );
+	return (
+		<div className='grid min-h-svh lg:grid-cols-2'>
+			<div className='flex flex-col gap-4 p-6 md:p-10'>
+				<div className='flex justify-center gap-2 md:justify-start'>
+					<a href='#' className='flex items-center gap-2 font-medium'>
+						<div className='flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground'>
+							<Image src={logo} alt='Logo' />
+						</div>
+						<span className='font-bold text-xl'>Townspark</span>
+					</a>
+				</div>
+				<div className='flex flex-3 items-center justify-center'>
+					<div className='w-full max-w-xs'>
+						<SignupForm
+							onSubmit={handleSubmit}
+							validationError={errors}
+						/>
+					</div>
+				</div>
+			</div>
+			<div className='relative flex-1 hidden bg-muted lg:block'>
+				<img
+					src='/placeholder.svg'
+					alt='Image'
+					className='absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale'
+				/>
+			</div>
+		</div>
+	);
 }

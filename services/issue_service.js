@@ -81,6 +81,14 @@ const IssueService = {
 	},
 
 	/**
+	 * Get issue by ID (basic info)
+	 * @param {number} issue_id - Issue ID
+	 */
+	async getIssueById(issue_id) {
+		return CoreIssueService.getIssueById(issue_id);
+	},
+
+	/**
 	 * Update an existing issue
 	 * @param {number} issue_id - Issue ID
 	 * @param {FormData|Object} data - Fields to update

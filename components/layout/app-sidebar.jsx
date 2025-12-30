@@ -32,6 +32,7 @@ import Image from "next/image";
 import logo from "@public/logo.png";
 import { toast } from "sonner";
 import AuthService from "@/services/auth_service";
+import useAuthStore from "@/store/auth_store";
 
 const mainNavItems = [
 	{
@@ -77,16 +78,11 @@ const secondaryNavItems = [
 export function AppSidebar() {
 	const pathname = usePathname();
 	const router = useRouter();
+	const { logout, getUserFullName, getUserEmail, getUserId } = useAuthStore();
 
-	const handleLogout = async () => {
-		try {
-			await AuthService.logout();
-			toast.success("Logged out successfully");
-			router.push("/login");
-		} catch (error) {
-			toast.error("Failed to logout");
-		}
-	};
+	async function handleLogout() {
+		logout();
+	}
 
 	return (
 		<Sidebar className='border-r'>
@@ -184,10 +180,10 @@ export function AppSidebar() {
 					</Avatar>
 					<div className='flex-1 min-w-0'>
 						<p className='font-semibold text-sm truncate'>
-							John Doe
+							{`${getUserFullName()} (ID: ${getUserId()})`}
 						</p>
 						<p className='text-xs text-muted-foreground truncate'>
-							john@example.com
+							{getUserEmail()}
 						</p>
 					</div>
 				</div>
