@@ -7,33 +7,27 @@ const nextConfig = {
 	},
 
 	async redirects() {
-		return [
-			{
-				source: "/explore",
-				destination: "/issue/explore",
-				permanent: false,
-			},
-			{
-				source: "/issue",
-				destination: "/issue/explore",
-				permanent: false,
-			},
-			{
-				source: "/issue/new",
-				destination: "/issue/create",
-				permanent: true,
-			},
-			{
-				source: "/issues",
-				destination: "/issue/mine",
-				permanent: true,
-			},
-			{
-				source: "/home",
-				destination: "/issue/explore",
-				permanent: true,
-			},
-		];
+		const aliases = {
+			"/issue/explore": ["/explore", "/issue", "/home", "/issues"],
+			"/issue/create": ["/issue/new"],
+			"/issue/mine": ["/profile/issues", "/my-issues"],
+		};
+
+		const permanentAliases = ["/issue/new", "/issues"];
+
+		const redirects = [];
+
+		for (const [destination, sources] of Object.entries(aliases)) {
+			for (const source of sources) {
+				redirects.push({
+					source,
+					destination,
+					permanent: permanentAliases.includes(source),
+				});
+			}
+		}
+
+		return redirects;
 	},
 };
 
