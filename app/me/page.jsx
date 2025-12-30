@@ -1,291 +1,452 @@
 "use client";
 
-import AuthService from "@/services/auth_service";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import {
-	User,
-	Mail,
-	Phone,
-	Loader2,
-	AlertCircle,
-	Camera,
-	Moon,
-	Sun,
+	MapPin,
+	Calendar,
+	Heart,
+	MessageSquare,
+	Image as ImageIcon,
+	Settings,
+	Edit,
+	Clock,
+	CheckCircle2,
 } from "lucide-react";
-import { toast } from "sonner";
-import { useTheme } from "next-themes";
+import AuthService from "@/services/auth_service";
 
-function MyInfoPage() {
-	const [userInfo, setUserInfo] = useState(null);
+const ProfilePage = () => {
+	const [profileData, setProfileData] = useState(null);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
+	const router = useRouter();
 
 	useEffect(() => {
-		fetchUserInfo();
+		fetchProfileData();
 	}, []);
 
-	const fetchUserInfo = async () => {
+	const fetchProfileData = async () => {
 		try {
-			setLoading(true);
 			const data = await AuthService.getMyInfo();
-
-			if (data.success) {
-				setUserInfo(data.response);
-				setError(null);
-			} else {
-				const errorMsg =
-					typeof data.error === "string"
-						? data.error
-						: "Failed to fetch user info";
-				setError(errorMsg);
-				toast.error(errorMsg);
-			}
-		} catch (err) {
-			const errorMsg = err.message || "An unexpected error occurred";
-			setError(errorMsg);
-			toast.error(errorMsg);
-		} finally {
+			setProfileData(data.response);
+			setLoading(false);
+		} catch (error) {
+			console.error("Error fetching profile:", error);
 			setLoading(false);
 		}
 	};
 
-	if (loading) {
-		return <LoadingState />;
-	}
+	const getCategoryColor = (category) => {
+		const colors = {
+			garbage: "bg-orange-500",
+			drainage: "bg-blue-500",
+			streetlight: "bg-yellow-500",
+			water: "bg-cyan-500",
+			road: "bg-gray-500",
+		};
+		return colors[category] || "bg-gray-500";
+	};
 
-	if (error) {
-		return <ErrorState error={error} onRetry={fetchUserInfo} />;
-	}
+	const formatDate = (dateString) => {
+		const date = new Date(dateString);
+		const now = new Date();
+		const diffTime = Math.abs(now.getTime() - date.getTime());
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-	return (
-		<div className='min-h-screen bg-gradient-to-br from-background-light via-neutral-bg to-background-light dark:from-background-dark dark:via-gray-900 dark:to-background-dark py-8 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300'>
-			<div className='max-w-6xl mx-auto'>
-				<div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8'>
-					<div>
-						<h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary-light dark:text-text-primary-dark'>
-							My Profile
-						</h1>
-						<p className='text-sm sm:text-base text-text-secondary-light dark:text-text-secondary-dark mt-1'>
-							Manage your personal information
+		if (diffDays === 0) return "Today";
+		if (diffDays === 1) return "Yesterday";
+		if (diffDays < 7) return `${diffDays} days ago`;
+		if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+		return date.toLocaleDateString();
+	};
+
+	const handleIssueClick = (issueId) => {
+		router.push(`/issue/details/${issueId}`);
+	};
+
+	const renderIssueCard = (issue, showComments = false) => (
+		<Card
+			key={issue.id}
+			className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
+			onClick={() => handleIssueClick(issue.id)}
+		>
+			<CardContent className='p-6'>
+				<div className='flex flex-col md:flex-row gap-4'>
+					{/* Issue Image */}
+					<div className='w-full md:w-32 h-32 rounded-lg overflow-hidden bg-muted flex-shrink-0'>
+						{issue.images.length > 0 ? (
+							<img
+								src={`${process.env.NEXT_PUBLIC_API_URL}${issue.images[0].image}`}
+								alt={issue.title}
+								className='w-full h-full object-cover'
+							/>
+						) : (
+							<div className='w-full h-full flex items-center justify-center'>
+								<ImageIcon className='w-8 h-8 text-muted-foreground' />
+							</div>
+						)}
+					</div>
+
+					{/* Issue Details */}
+					<div className='flex-1 min-w-0'>
+						<div className='flex flex-wrap items-start justify-between gap-2 mb-2'>
+							<div className='flex-1 min-w-0'>
+								<h3 className='text-lg font-semibold mb-1 truncate'>
+									{issue.title}
+								</h3>
+								<div className='flex flex-wrap gap-2 mb-2'>
+									<Badge
+										className={getCategoryColor(
+											issue.category
+										)}
+									>
+										{issue.category}
+									</Badge>
+									{issue.is_resolved ? (
+										<Badge
+											variant='outline'
+											className='text-green-600 border-green-600'
+										>
+											<CheckCircle2 className='w-3 h-3 mr-1' />
+											Resolved
+										</Badge>
+									) : (
+										<Badge
+											variant='outline'
+											className='text-orange-600 border-orange-600'
+										>
+											<Clock className='w-3 h-3 mr-1' />
+											In Progress
+										</Badge>
+									)}
+								</div>
+							</div>
+						</div>
+
+						<p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
+							{issue.description}
 						</p>
+
+						<div className='flex flex-wrap gap-4 text-sm text-muted-foreground'>
+							<div className='flex items-center gap-1'>
+								<MapPin className='w-4 h-4' />
+								<span className='truncate max-w-[200px]'>
+									{issue.address}
+								</span>
+							</div>
+							<div className='flex items-center gap-1'>
+								<Calendar className='w-4 h-4' />
+								<span>{formatDate(issue.created_at)}</span>
+							</div>
+						</div>
+
+						{showComments &&
+							issue.user_comments &&
+							issue.user_comments.length > 0 && (
+								<div className='mt-3 p-3 bg-muted rounded-lg'>
+									<p className='text-xs font-semibold text-muted-foreground mb-2'>
+										Your Comments:
+									</p>
+									{issue.user_comments.map((comment) => (
+										<div
+											key={comment.id}
+											className='mb-2 last:mb-0'
+										>
+											<p className='text-sm'>
+												{comment.text}
+											</p>
+											<p className='text-xs text-muted-foreground mt-1'>
+												{formatDate(comment.created_at)}
+											</p>
+										</div>
+									))}
+								</div>
+							)}
+
+						<Separator className='my-3' />
+
+						<div className='flex flex-wrap gap-4 text-sm'>
+							<div className='flex items-center gap-1 text-muted-foreground'>
+								<Heart className='w-4 h-4' />
+								<span>{issue.likes_count} likes</span>
+							</div>
+							<div className='flex items-center gap-1 text-muted-foreground'>
+								<MessageSquare className='w-4 h-4' />
+								<span>{issue.comments_count} comments</span>
+							</div>
+							<div className='flex items-center gap-1 text-muted-foreground'>
+								<ImageIcon className='w-4 h-4' />
+								<span>{issue.images.length} images</span>
+							</div>
+						</div>
 					</div>
-					<ThemeToggle />
 				</div>
-				<div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-					<div className='lg:col-span-1'>
-						<ProfileHeader userInfo={userInfo} />
-					</div>
-					<div className='lg:col-span-2'>
-						<ProfileDetails userInfo={userInfo} />
-					</div>
-				</div>
-			</div>
-		</div>
+			</CardContent>
+		</Card>
 	);
-}
 
-function ThemeToggle() {
-	const { theme, setTheme } = useTheme();
-	const [mounted, setMounted] = useState(false);
-
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	if (!mounted) {
+	if (loading || !profileData) {
 		return (
-			<div className='w-10 h-10 rounded-lg bg-card-light dark:bg-card-dark' />
+			<div className='flex items-center justify-center min-h-screen'>
+				<div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
+			</div>
 		);
 	}
 
-	return (
-		<button
-			onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-			className='p-2.5 rounded-lg bg-card-light dark:bg-card-dark shadow-card dark:shadow-card-dark border border-border-light dark:border-border-dark hover:scale-105 active:scale-95 transition-all duration-200'
-			aria-label='Toggle theme'
-		>
-			{theme === "dark" ? (
-				<Sun className='w-5 h-5 text-primary' />
-			) : (
-				<Moon className='w-5 h-5 text-primary' />
-			)}
-		</button>
-	);
-}
-
-function LoadingState() {
-	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-background-light via-neutral-bg to-background-light dark:from-background-dark dark:via-gray-900 dark:to-background-dark transition-colors duration-300'>
-			<div className='text-center space-y-4 animate-fade-in px-4'>
-				<div className='relative'>
-					<div className='absolute inset-0 bg-primary/20 dark:bg-primary/30 blur-xl rounded-full animate-pulse' />
-					<Loader2 className='w-12 h-12 sm:w-16 sm:h-16 animate-spin text-primary mx-auto relative z-10' />
-				</div>
-				<p className='text-sm sm:text-base text-text-secondary-light dark:text-text-secondary-dark font-medium'>
-					Loading your profile...
-				</p>
-			</div>
-		</div>
-	);
-}
-
-function ErrorState({ error, onRetry }) {
-	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-background-light via-neutral-bg to-background-light dark:from-background-dark dark:via-gray-900 dark:to-background-dark px-4 transition-colors duration-300'>
-			<div className='max-w-md w-full bg-card-light dark:bg-card-dark rounded-xl sm:rounded-2xl shadow-card dark:shadow-card-dark border border-border-light dark:border-border-dark p-6 sm:p-8 text-center space-y-4 sm:space-y-6 animate-slide-up'>
-				<div className='w-14 h-14 sm:w-16 sm:h-16 bg-destructive/10 dark:bg-destructive/20 rounded-full flex items-center justify-center mx-auto'>
-					<AlertCircle className='w-7 h-7 sm:w-8 sm:h-8 text-destructive' />
-				</div>
-				<div className='space-y-2'>
-					<h3 className='text-lg sm:text-xl font-semibold text-text-primary-light dark:text-text-primary-dark'>
-						Something went wrong
-					</h3>
-					<p className='text-sm sm:text-base text-text-secondary-light dark:text-text-secondary-dark'>
-						{error}
-					</p>
-				</div>
-				<button
-					onClick={onRetry}
-					className='w-full bg-primary hover:bg-primary-dark text-white font-medium py-2.5 sm:py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95'
-				>
-					Try Again
-				</button>
-			</div>
-		</div>
-	);
-}
-
-function ProfileHeader({ userInfo }) {
-	const getInitials = () => {
-		const first = userInfo?.first_name?.[0] || "";
-		const last = userInfo?.last_name?.[0] || "";
-		return `${first}${last}`.toUpperCase() || "U";
-	};
+	const { user, reported_issues, liked_issues, commented_issues, stats } =
+		profileData;
 
 	return (
-		<div className='bg-card-light dark:bg-card-dark rounded-xl sm:rounded-2xl shadow-card dark:shadow-card-dark border border-border-light dark:border-border-dark p-6 sm:p-8 animate-slide-up transition-colors duration-300'>
-			<div className='flex flex-col items-center text-center space-y-4 sm:space-y-6'>
-				<div className='relative group'>
-					<div className='absolute -inset-1 bg-gradient-to-br from-primary to-primary-light rounded-full blur opacity-25 group-hover:opacity-40 transition duration-300' />
-					<div className='relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg ring-4 ring-card-light dark:ring-card-dark transition-transform duration-300 group-hover:scale-105'>
-						{userInfo?.profile_pic ? (
-							<img
-								src={userInfo.profile_pic}
-								alt={userInfo.full_name}
-								className='w-full h-full rounded-full object-cover'
-							/>
-						) : (
-							<span>{getInitials()}</span>
-						)}
+		<div className='container mx-auto px-4 py-8 max-w-7xl'>
+			{/* Profile Header */}
+			<Card className='mb-6'>
+				<CardContent className='pt-6'>
+					<div className='flex flex-col md:flex-row items-center md:items-start gap-6'>
+						<div className='relative'>
+							<Avatar className='w-32 h-32'>
+								<AvatarImage
+									src={user.profile_pic || undefined}
+									alt={user.full_name}
+								/>
+								<AvatarFallback className='text-3xl'>
+									{user.first_name[0]}
+									{user.last_name[0]}
+								</AvatarFallback>
+							</Avatar>
+							<div className='absolute bottom-0 right-0 w-8 h-8 bg-green-500 rounded-full border-4 border-background'></div>
+						</div>
+
+						<div className='flex-1 text-center md:text-left'>
+							<h1 className='text-3xl font-bold mb-1'>
+								{user.full_name}
+							</h1>
+							<p className='text-muted-foreground mb-2'>
+								{user.email}
+							</p>
+							<p className='text-sm text-muted-foreground mb-4'>
+								{user.phone_number}
+							</p>
+
+							<div className='flex flex-wrap gap-2 justify-center md:justify-start'>
+								<Button size='sm'>
+									<Edit className='w-4 h-4 mr-2' />
+									Edit Profile
+								</Button>
+								<Button size='sm' variant='outline'>
+									<Settings className='w-4 h-4 mr-2' />
+									Settings
+								</Button>
+							</div>
+						</div>
 					</div>
-					<button
-						className='absolute bottom-0 right-0 bg-primary hover:bg-primary-dark text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 border-2 border-card-light dark:border-card-dark'
-						aria-label='Change profile picture'
-					>
-						<Camera className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-					</button>
-				</div>
+				</CardContent>
+			</Card>
 
-				<div className='space-y-2 w-full'>
-					<h2 className='text-xl sm:text-2xl font-bold text-text-primary-light dark:text-text-primary-dark break-words'>
-						{userInfo?.full_name || "User Name"}
-					</h2>
-					<p className='text-xs sm:text-sm text-text-secondary-light dark:text-text-secondary-dark'>
-						Member since {new Date().getFullYear()}
-					</p>
-				</div>
+			{/* Stats Grid */}
+			<div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-6'>
+				<Card>
+					<CardHeader className='pb-3'>
+						<CardTitle className='text-sm font-medium text-muted-foreground'>
+							Reported
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='text-3xl font-bold text-blue-600 dark:text-blue-400'>
+							{stats.total_issues_reported}
+						</div>
+						<p className='text-xs text-muted-foreground mt-1'>
+							Issues
+						</p>
+					</CardContent>
+				</Card>
 
-				<div className='w-full pt-4 border-t border-border-light dark:border-border-dark space-y-3'>
-					<StatItem label='Posts' value='12' />
-					<StatItem label='Contributions' value='45' />
-					<StatItem label='Reputation' value='★ 4.8' />
-				</div>
+				<Card>
+					<CardHeader className='pb-3'>
+						<CardTitle className='text-sm font-medium text-muted-foreground'>
+							Liked
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='text-3xl font-bold text-red-600 dark:text-red-400'>
+							{stats.total_issues_liked}
+						</div>
+						<p className='text-xs text-muted-foreground mt-1'>
+							Issues
+						</p>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader className='pb-3'>
+						<CardTitle className='text-sm font-medium text-muted-foreground'>
+							Comments
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='text-3xl font-bold text-green-600 dark:text-green-400'>
+							{stats.total_comments_made}
+						</div>
+						<p className='text-xs text-muted-foreground mt-1'>
+							Made
+						</p>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader className='pb-3'>
+						<CardTitle className='text-sm font-medium text-muted-foreground'>
+							Images
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='text-3xl font-bold text-purple-600 dark:text-purple-400'>
+							{stats.total_images_added}
+						</div>
+						<p className='text-xs text-muted-foreground mt-1'>
+							Uploaded
+						</p>
+					</CardContent>
+				</Card>
 			</div>
+
+			{/* Tabs Section */}
+			<Tabs defaultValue='reported' className='w-full'>
+				<TabsList className='grid w-full grid-cols-2 md:w-auto md:inline-grid'>
+					<TabsTrigger value='reported'>
+						My Reports ({reported_issues.count})
+					</TabsTrigger>
+					<TabsTrigger value='activity'>Activity</TabsTrigger>
+				</TabsList>
+
+				<TabsContent value='reported' className='space-y-4 mt-6'>
+					{reported_issues.issues.length === 0 ? (
+						<Card>
+							<CardContent className='flex flex-col items-center justify-center py-12'>
+								<p className='text-muted-foreground'>
+									No issues reported yet
+								</p>
+							</CardContent>
+						</Card>
+					) : (
+						reported_issues.issues.map((issue) =>
+							renderIssueCard(issue)
+						)
+					)}
+				</TabsContent>
+
+				<TabsContent value='activity' className='mt-6'>
+					<div className='space-y-6'>
+						{/* My Likes Section */}
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<Heart className='w-5 h-5 text-red-500' />
+									My Likes ({liked_issues.count})
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								{liked_issues.issues.length === 0 ? (
+									<p className='text-muted-foreground text-center py-8'>
+										No liked issues yet
+									</p>
+								) : (
+									<div className='space-y-4'>
+										{liked_issues.issues.map((issue) =>
+											renderIssueCard(issue)
+										)}
+									</div>
+								)}
+							</CardContent>
+						</Card>
+
+						{/* My Comments Section */}
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<MessageSquare className='w-5 h-5 text-blue-500' />
+									My Comments ({commented_issues.count})
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								{commented_issues.issues.length === 0 ? (
+									<p className='text-muted-foreground text-center py-8'>
+										No comments made yet
+									</p>
+								) : (
+									<div className='space-y-4'>
+										{commented_issues.issues.map((issue) =>
+											renderIssueCard(issue, true)
+										)}
+									</div>
+								)}
+							</CardContent>
+						</Card>
+
+						{/* Activity Summary */}
+						<Card>
+							<CardHeader>
+								<CardTitle>Activity Summary</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+									<div className='p-4 bg-muted rounded-lg'>
+										<div className='flex items-center gap-3'>
+											<div className='p-2 bg-blue-500/10 rounded-lg'>
+												<MessageSquare className='w-6 h-6 text-blue-500' />
+											</div>
+											<div>
+												<p className='text-2xl font-bold'>
+													{stats.total_comments_made}
+												</p>
+												<p className='text-sm text-muted-foreground'>
+													Total Comments
+												</p>
+											</div>
+										</div>
+									</div>
+									<div className='p-4 bg-muted rounded-lg'>
+										<div className='flex items-center gap-3'>
+											<div className='p-2 bg-red-500/10 rounded-lg'>
+												<Heart className='w-6 h-6 text-red-500' />
+											</div>
+											<div>
+												<p className='text-2xl font-bold'>
+													{stats.total_issues_liked}
+												</p>
+												<p className='text-sm text-muted-foreground'>
+													Total Likes
+												</p>
+											</div>
+										</div>
+									</div>
+									<div className='p-4 bg-muted rounded-lg'>
+										<div className='flex items-center gap-3'>
+											<div className='p-2 bg-purple-500/10 rounded-lg'>
+												<ImageIcon className='w-6 h-6 text-purple-500' />
+											</div>
+											<div>
+												<p className='text-2xl font-bold'>
+													{stats.total_images_added}
+												</p>
+												<p className='text-sm text-muted-foreground'>
+													Images Uploaded
+												</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</CardContent>
+						</Card>
+					</div>
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
-}
+};
 
-function StatItem({ label, value }) {
-	return (
-		<div className='flex justify-between items-center py-2 px-3 rounded-lg hover:bg-neutral-bg dark:hover:bg-gray-800/50 transition-all duration-200'>
-			<span className='text-sm text-text-secondary-light dark:text-text-secondary-dark'>
-				{label}
-			</span>
-			<span className='text-sm font-semibold text-text-primary-light dark:text-text-primary-dark'>
-				{value}
-			</span>
-		</div>
-	);
-}
-
-function ProfileDetails({ userInfo }) {
-	const details = [
-		{
-			icon: User,
-			label: "Full Name",
-			value: userInfo?.full_name,
-			color: "text-primary",
-			bgColor: "bg-primary/10 dark:bg-primary/20",
-		},
-		{
-			icon: Mail,
-			label: "Email Address",
-			value: userInfo?.email,
-			color: "text-blue-500 dark:text-blue-400",
-			bgColor: "bg-blue-500/10 dark:bg-blue-500/20",
-		},
-		{
-			icon: Phone,
-			label: "Phone Number",
-			value: userInfo?.phone_number,
-			color: "text-green-500 dark:text-green-400",
-			bgColor: "bg-green-500/10 dark:bg-green-500/20",
-		},
-	];
-
-	return (
-		<div
-			className='bg-card-light dark:bg-card-dark rounded-xl sm:rounded-2xl shadow-card dark:shadow-card-dark border border-border-light dark:border-border-dark p-6 sm:p-8 animate-slide-up transition-colors duration-300'
-			style={{ animationDelay: "0.1s" }}
-		>
-			<h2 className='text-xl sm:text-2xl font-bold text-text-primary-light dark:text-text-primary-dark mb-4 sm:mb-6'>
-				Profile Information
-			</h2>
-			<div className='space-y-3 sm:space-y-4'>
-				{details.map((detail, index) => (
-					<ProfileDetailItem key={index} {...detail} />
-				))}
-			</div>
-			<div className='mt-6 sm:mt-8 pt-6 border-t border-border-light dark:border-border-dark flex flex-col sm:flex-row gap-3'>
-				<button className='flex-1 bg-primary-foreground/40 hover:bg-primary-foreground text-white font-medium py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95'>
-					Edit Profile
-				</button>
-				<button className='flex-1 bg-neutral-bg dark:bg-gray-800 hover:bg-neutral-border dark:hover:bg-gray-700 text-text-primary-light dark:text-text-primary-dark font-medium py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95 border border-border-light dark:border-border-dark'>
-					Settings
-				</button>
-			</div>
-		</div>
-	);
-}
-
-function ProfileDetailItem({ icon: Icon, label, value, color, bgColor }) {
-	return (
-		<div className='group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-neutral-bg dark:hover:bg-gray-800/50 transition-all duration-200 border border-transparent hover:border-border-light dark:hover:border-border-dark'>
-			<div
-				className={`${bgColor} p-2.5 sm:p-3 rounded-lg group-hover:scale-110 transition-transform duration-200 flex-shrink-0`}
-			>
-				<Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${color}`} />
-			</div>
-			<div className='flex-1 min-w-0'>
-				<p className='text-xs sm:text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1'>
-					{label}
-				</p>
-				<p className='text-sm sm:text-base font-semibold text-text-primary-light dark:text-text-primary-dark break-words'>
-					{value || "Not provided"}
-				</p>
-			</div>
-		</div>
-	);
-}
-
-export default MyInfoPage;
+export default ProfilePage;

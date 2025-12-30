@@ -3,7 +3,7 @@ import api from "./api.js";
 const urls = {
 	LOGIN: "/auth/login/",
 	REGISTER: "/auth/register/",
-	MYINFO: "/auth/me/",
+	MYINFO: "/profile/",
 	REFRESH: "/auth/token/refresh/",
 	VERIFY: "/auth/token/verify/",
 	LOGOUT: "/auth/logout/",
@@ -113,6 +113,10 @@ const AuthService = {
 		const data = Object.fromEntries(formData.entries());
 
 		return api.put(urls.UPDATE_PROFILE, data);
+	},
+
+	getAnalytics() {
+		return api.get("/profile/analytics/");
 	},
 };
 

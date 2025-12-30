@@ -33,6 +33,7 @@ import logo from "@public/logo.png";
 import { toast } from "sonner";
 import AuthService from "@/services/auth_service";
 import useAuthStore from "@/store/auth_store";
+import { useEffect, useState } from "react";
 
 const mainNavItems = [
 	{
@@ -82,6 +83,16 @@ export function AppSidebar() {
 
 	async function handleLogout() {
 		logout();
+	}
+
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (!mounted) {
+		return null;
 	}
 
 	return (

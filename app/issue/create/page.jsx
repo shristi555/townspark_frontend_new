@@ -47,6 +47,7 @@ export default function CreateIssuePage() {
 
 			try {
 				const response = await IssueService.createIssue(formData);
+				// console.log("Issue creation response:", response);
 				if (response.success) {
 					toast.success("Issue reported successfully!");
 					router.push("/issue/mine");

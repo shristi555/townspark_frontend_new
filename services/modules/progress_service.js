@@ -102,7 +102,7 @@ const ProgressService = {
 	async createProgress(data) {
 		return api.post(progress_urls.create, data, {
 			headers: {
-				"Content-Type": "application/json",
+				"Content-Type": "multipart/form-data",
 			},
 		});
 	},

@@ -191,6 +191,16 @@ const IssueService = {
 	/**
 	 * Create a new progress update for an issue
 	 * @param {Object} data - { issue_id: number, title: string, description: string }
+	 *
+	 * @requestformat
+	 *
+	 *  **Request Format (multipart/form-data):**
+	 *	- issue_id: integer (required)
+	 *	- title: string (required)
+	 *	- description: string (required)
+	 *	- uploaded_images: file[] (optional, max 10)
+	 *
+	 *
 	 */
 	async createIssueProgress(data) {
 		return ProgressService.createProgress(data);
@@ -219,6 +229,12 @@ const IssueService = {
 	async deleteIssueProgress(progress_id) {
 		return ProgressService.deleteProgress(progress_id);
 	},
+
+	async fetchCategories() {
+		return CoreIssueService.fetchCategories();
+	}
+
+
 };
 
 export default IssueService;

@@ -160,6 +160,9 @@ const CoreIssueService = {
 	 * Delete an issue (owner or staff only)
 	 * @param {number} issue_id - Issue ID
 	 * @returns {Promise} 204 No Content on success
+	 *
+	 *
+	 *
 	 */
 	async deleteIssue(issue_id) {
 		return api.delete(issue_urls.delete(issue_id));
@@ -181,6 +184,10 @@ const CoreIssueService = {
 	 */
 	async unarchiveIssue(issue_id) {
 		return api.post(issue_urls.unarchive(issue_id));
+	},
+
+	async fetchCategories() {
+		return api.get("/issues/category/list/");
 	},
 };
 
