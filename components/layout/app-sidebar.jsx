@@ -7,7 +7,6 @@ import {
 	PlusCircle,
 	MapPin,
 	BarChart3,
-	Settings,
 	User,
 	LogOut,
 	HelpCircle,
@@ -65,9 +64,9 @@ const secondaryNavItems = [
 		url: "/analytics",
 	},
 	{
-		title: "Settings",
-		icon: Settings,
-		url: "/settings",
+		title: "Profile",
+		icon: User,
+		url: "/profile",
 	},
 	{
 		title: "Help & Support",

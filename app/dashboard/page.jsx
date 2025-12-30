@@ -1,19 +1,13 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from "@/components/ui/sidebar";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Page() {
-	return <div className='p-6'>Dashboard is under construction.</div>;
+	// simply redirect to /analytics page
+
+	const router = useRouter();
+	useEffect(() => {
+		router.push("/analytics");
+	}, [router]);
 }
