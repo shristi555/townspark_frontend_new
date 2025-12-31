@@ -76,6 +76,21 @@ export default function IssueDetailsPage() {
 		}
 	};
 
+	const handleDeleteIssue = async () => {
+		try {
+			await IssueService.deleteIssue(params.id);
+			toast.success("Issue deleted successfully");
+			router.push("/issue/mine");
+		} catch (error) {
+			console.error("Error deleting issue:", error);
+			toast.error("Failed to delete issue");
+		}
+	};
+
+	const handleUpdateIssue = () => {
+		router.push(`/issue/update/${params.id}`);
+	};
+
 	if (loading) {
 		return <IssueDetailsSkeleton />;
 	}
@@ -90,6 +105,8 @@ export default function IssueDetailsPage() {
 			onBack={handleBack}
 			onAddComment={handleAddComment}
 			onToggleLike={handleToggleLike}
+			onDeleteIssue={handleDeleteIssue}
+			onUpdateIssue={handleUpdateIssue}
 		/>
 	);
 }

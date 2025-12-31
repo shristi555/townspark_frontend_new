@@ -10,10 +10,10 @@ export default function MapView({ latitude, longitude }) {
 
 	useEffect(() => {
 		if (!mapRef.current || mapInstanceRef.current) return;
+		if (!latitude || !longitude) return;
 
 		// Initialize map
 		const map = L.map(mapRef.current).setView([latitude, longitude], 15);
-
 		L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 			attribution:
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
