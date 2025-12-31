@@ -1,84 +1,79 @@
 import axios from "axios";
 
-// The auth is cookie based, so we need to ensure that
-// withCredentials is set to true for cross-origin requests.
+/**
+ * Townspark API Client
+ * 
+ * Response Format (SRE Principle):
+ * {
+ *   success: boolean,
+ *   response: data,
+ *   error: {
+ *     type: string,
+ *     message: string | object,
+ *     message_type: 'str' | 'dict' | 'list',
+ *     reached_server: boolean
+ *   }
+ * }
+ */
+
 const api = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_URL,
-	timeout: 10000,
+	timeout: 15000, // Increased timeout slightly
 	withCredentials: true,
 	headers: {
 		"Content-Type": "application/json",
 	},
 });
 
+/**
+ * Standardizes the error object for the rest of the application
+ */
+function standardizeError(errorData, status = null, reachedServer = true) {
+	return {
+		type: errorData?.type || "unknown_error",
+		message: errorData?.message || "An unexpected error occurred",
+		message_type: errorData?.message_type || "str",
+		status: status,
+		reached_server: reachedServer,
+	};
+}
+
 function handleSuccessResponse(response) {
-	const gotData = response.data;
-	// console.log("API Response:", gotData);
+	const data = response.data;
 
-	if (typeof gotData?.success !== "boolean") {
-		return Promise.reject("Invalid response format");
+	if (typeof data?.success !== "boolean") {
+		return Promise.reject(standardizeError({ message: "Invalid response format" }, response.status, true));
 	}
 
-	if (gotData.success === false) {
-		return Promise.reject(gotData.error || "Something went wrong");
+	if (data.success === false) {
+		// Even if 200 OK, if success is false, treat as error
+		return Promise.reject(standardizeError(data.error, response.status, true));
 	}
 
-	return gotData;
+	// Success! Return the whole data object (which has {success, response, error})
+	return data;
 }
 
 async function handleErrorResponse(error) {
-	/*
-	The backend is consistent in sending the error responses in the format:
-	{
-		success: false,
-		error: {
-			type : <error type like 'validation_error' but dont rely on it just yet>,	
-			message: <the error message can be string or object>,
-			message_type : <especifies what type of message it is like 'string' or 'list' or 'object' this is quite reliable then the 'type' field it was extracted using pythons type() function so string maybe called 'str' or 'string' etc be aware>,
-		}
-	}
-
-	We now have a consistent format for error responses too, so we can parse them accordingly.
-
-	*/
-
 	const response = error?.response;
-	console.log("API Error Response:", response);
 
-	if (!response || !response.data) {
-		return Promise.reject("Network error or server not reachable");
+	if (!response) {
+		// Network error or timeout
+		return Promise.reject(standardizeError({ 
+			message: "Could not reach the server. Please check your connection." 
+		}, null, false));
 	}
 
-	const recieveeData = response.data;
+	const data = response.data;
 
-	if (typeof recieveeData.success !== "boolean") {
-		return Promise.reject("Invalid error response format");
+	if (data && typeof data.success === "boolean" && data.success === false) {
+		return Promise.reject(standardizeError(data.error, response.status, true));
 	}
 
-	// it will always be a object here
-	let extractedError;
-	if (recieveeData.success === false) {
-		extractedError = recieveeData.error;
-	}
-
-	// let errorMessage = "An error occurred";
-	// if (extractedError) {
-	// 	if (typeof extractedError.message === "string") {
-	// 		errorMessage = extractedError.message;
-	// 	} else if (typeof extractedError.message === "object") {
-	// 		// dont hassle anything just stringify it and return
-	// 		errorMessage = JSON.stringify(extractedError.message);
-	// 	}
-	// }
-
-	return Promise.reject({
-		type: extractedError?.type,
-		message: extractedError?.message,
-		message_type: extractedError?.message_type,
-		reached_server: extractedError.reached_server || false,
-		status: error?.response?.status,
-	
-	});
+	// Fallback for non-SRE compliant error responses (like 404 HTML or 500 error)
+	return Promise.reject(standardizeError({ 
+		message: `Server responded with status ${response.status}` 
+	}, response.status, true));
 }
 
 api.interceptors.response.use(handleSuccessResponse, handleErrorResponse);

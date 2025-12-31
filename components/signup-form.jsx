@@ -51,7 +51,11 @@ export default function SignupForm({ onSubmit, validationError }) {
 					<form onSubmit={onSubmit}>
 						<CardContent className='space-y-6 px-8'>
 							<div className='errorMessage'>
-								<ErrorBox message={validationError?.general} />
+								{typeof validationError === "string" ? (
+									<ErrorBox message={validationError} />
+								) : (
+									<ErrorBox message={validationError?.general} />
+								)}
 							</div>
 
 							<div className='grid grid-cols-2 gap-4'>
@@ -151,7 +155,7 @@ export default function SignupForm({ onSubmit, validationError }) {
 							<ErrorBox message={validationError?.password} />
 
 							<div className='flex items-center space-x-2'>
-								<Checkbox id='terms' name='terms' checked />
+								<Checkbox id='terms' name='terms' defaultChecked />
 								<label
 									htmlFor='terms'
 									className='text-sm text-muted-foreground'

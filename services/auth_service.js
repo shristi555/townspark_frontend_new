@@ -1,125 +1,38 @@
-import api from "./api.js";
+import useAuthStore from "@/store/auth_store";
 
-const urls = {
-	LOGIN: "/auth/login/",
-	REGISTER: "/auth/register/",
-	MYINFO: "/profile/",
-	REFRESH: "/auth/token/refresh/",
-	VERIFY: "/auth/token/verify/",
-	LOGOUT: "/auth/logout/",
-	UPDATE_PROFILE: "/auth/me/update/",
-};
-
-const AuthDataValidators = {
-	validateRegisterData(formData) {
-		// Convert FormData to plain object
-		const data = Object.fromEntries(formData.entries());
-
-		console.log("Validating data:", data);
-
-		const errors = {};
-
-		// Check mandatory fields
-		if (!data.first_name || data.first_name.trim() === "") {
-			errors.first_name = "First name is required";
-		}
-
-		if (!data.email || data.email.trim() === "") {
-			errors.email = "Email is required";
-		}
-
-		if (!data.password || data.password.trim() === "") {
-			errors.password = "Password is required";
-		}
-
-		// Check terms acceptance
-		if (!data.terms || data.terms !== "on") {
-			errors.terms = "You must agree to the terms and conditions";
-		}
-
-		const generalMessage = Object.values(errors).join(", and, ");
-
-		// delete individual field errors if there is a general message
-		if (generalMessage) {
-			errors.general = generalMessage;
-			delete errors.first_name;
-			delete errors.last_name;
-			delete errors.email;
-			delete errors.phone_number;
-			delete errors.password;
-		}
-
-		return Object.keys(errors).length === 0 ? null : errors;
-	},
-
-	validateLoginData(formData) {
-		const data = Object.fromEntries(formData.entries());
-		const errors = {};
-
-		if (!data.email || data.email.trim() === "") {
-			errors.email = "Email is required";
-		}
-
-		if (!data.password || data.password.trim() === "") {
-			errors.password = "Password is required";
-		}
-
-		return Object.keys(errors).length === 0 ? null : errors;
-	},
-};
-
+/**
+ * AuthService is now a wrapper around useAuthStore to maintain backward compatibility.
+ * It is recommended to use useAuthStore directly in components.
+ */
 const AuthService = {
-	urls: urls,
-	// Kept for backward compatibility
-	...AuthDataValidators,
-
-	login(email, password) {
-		return api.post(urls.LOGIN, {
-			email: email,
-			password: password,
-		});
+	login: (email, password) => useAuthStore.getState().login(email, password),
+	register: (formData) => useAuthStore.getState().register(formData),
+	logout: () => useAuthStore.getState().logout(),
+	verifyToken: () => useAuthStore.getState().checkAuthStatus(true),
+	refreshToken: () => useAuthStore.getState().refreshToken(),
+	getMyInfo: async () => {
+		const res = await useAuthStore.getState().fetchProfile();
+		if (res.success) {
+			// ProfilePage expects the SRE structure or something similar
+			// Since res.data is the payload (response part of SRE), we wrap it back 
+			// if the component does data.response.
+			return { success: true, response: res.data };
+		}
+		throw res.error;
 	},
-
-	register(formData) {
-		// Convert FormData to object
+	updateProfile: (formData) => useAuthStore.getState().updateProfile(formData),
+	
+	// Exposing validation logic if needed, although it's better to let the store/backend handle it
+	validateRegisterData: (formData) => {
 		const data = Object.fromEntries(formData.entries());
-
-		return api.post(urls.REGISTER, {
-			first_name: data.first_name,
-			last_name: data.last_name,
-			email: data.email,
-			password: data.password,
-			phone_number: data.phone_number || null,
-		});
-	},
-
-	refreshToken() {
-		return api.post(urls.REFRESH);
-	},
-
-	verifyToken() {
-		return api.post(urls.VERIFY);
-	},
-
-	getMyInfo() {
-		return api.get(urls.MYINFO);
-	},
-
-	logout() {
-		return api.post(urls.LOGOUT);
-	},
-	updateProfile(formData) {
-		// Convert FormData to object
-		const data = Object.fromEntries(formData.entries());
-
-		return api.put(urls.UPDATE_PROFILE, data);
-	},
-
-	getAnalytics() {
-		return api.get("/profile/analytics/");
-	},
+		const errors = {};
+		if (!data.first_name) errors.first_name = "First name is required";
+		if (!data.email) errors.email = "Email is required";
+		if (!data.password) errors.password = "Password is required";
+		if (data.terms !== "on" && !data.terms) errors.terms = "You must agree to the terms";
+		
+		return Object.keys(errors).length > 0 ? errors : null;
+	}
 };
 
 export default AuthService;
-
-/// For additional me or profile releted tasks are also in profile_service.js

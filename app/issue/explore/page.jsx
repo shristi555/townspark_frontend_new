@@ -30,41 +30,35 @@ import { BsCheckCircle, BsCircle } from "react-icons/bs";
 import { IoMdImages } from "react-icons/io";
 import { HiOutlineSun, HiOutlineMoon } from "react-icons/hi";
 import { cn } from "@/lib/utils";
-
-const { default: api } = require("@/services/api");
+import api from "@/services/api";
+import { useNeedAuth } from "@/hooks/auth-check";
 
 async function exploreIssue(page = 1, page_size = 10, params = {}) {
-	const url = new URL(
-		`${process.env.NEXT_PUBLIC_API_BASE_URL}/profile/explore`
-	);
+	// Construct relative path as api instance handled baseURL
+	const url = new URL("/profile/explore", process.env.NEXT_PUBLIC_API_URL);
 	url.searchParams.set("page", String(page));
 	url.searchParams.set("page_size", String(page_size));
-	// pass additional filters if needed (server-side filter support)
+	
 	Object.keys(params).forEach(
 		(k) => params[k] && url.searchParams.set(k, params[k])
 	);
+
 	try {
-		const resp = await api.get(url.toString());
+		// Just pass the path and params, let axios handle the rest
+		const resp = await api.get(url.pathname + url.search);
 		if (resp.success) {
 			return resp.response;
 		}
 	} catch (error) {
 		console.error("Error exploring issues:", error);
-		return {
-			count: 0,
-			page: 1,
-			page_size: 10,
-			total_pages: 0,
-			results: [],
-		};
+		return null;
 	}
 }
 
 function IssueCard({ issue }) {
-	const { theme, setTheme } = useTheme();
 	const firstImage =
 		issue.images && issue.images.length > 0
-			? process.env.NEXT_PUBLIC_API_BASE_URL + issue.images[0].image
+			? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '') + issue.images[0].image
 			: null;
 
 	return (
@@ -125,6 +119,7 @@ function IssueCard({ issue }) {
 					</div>
 				</CardHeader>
 
+				{/* Rest of IssueCard remains same */}
 				{firstImage ? (
 					<div className='w-full h-48 sm:h-56 lg:h-44 overflow-hidden rounded-b-lg'>
 						<img
@@ -211,6 +206,7 @@ function IssueSkeleton() {
 }
 
 export default function ExplorePage() {
+	const { loading: authLoading } = useNeedAuth();
 	const [issues, setIssues] = useState([]);
 	const [page, setPage] = useState(1);
 	const [pageSize] = useState(10);
@@ -231,8 +227,8 @@ export default function ExplorePage() {
 				setIssues((prev) =>
 					pageNum === 1 ? data.results : [...prev, ...data.results]
 				);
-				setTotalPages(data.total_pages);
-				setHasMore(pageNum < data.total_pages);
+				setTotalPages(data.total_pages || 1);
+				setHasMore(pageNum < (data.total_pages || 1));
 			}
 			setLoading(false);
 			setInitialLoading(false);
@@ -241,11 +237,9 @@ export default function ExplorePage() {
 	);
 
 	useEffect(() => {
-		// initial load
 		fetchIssues(1);
 	}, [fetchIssues]);
 
-	// Infinite scroll using IntersectionObserver
 	useEffect(() => {
 		if (!hasMore || loading) return;
 		const observer = new window.IntersectionObserver(
@@ -266,7 +260,6 @@ export default function ExplorePage() {
 		if (page > 1) fetchIssues(page);
 	}, [page, fetchIssues]);
 
-	// Local client-side filter for smoother UX (server handles primary filtering)
 	const filteredIssues = useMemo(() => {
 		return issues.filter((i) => {
 			const q = search.trim().toLowerCase();
@@ -284,6 +277,14 @@ export default function ExplorePage() {
 		const set = new Set(issues.map((i) => i.category));
 		return Array.from(set).filter(Boolean);
 	}, [issues]);
+
+	if (authLoading) {
+		return (
+			<div className='flex items-center justify-center min-h-screen'>
+				<div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
+			</div>
+		);
+	}
 
 	return (
 		<div className='min-h-screen px-3 sm:px-6 lg:px-12 py-8 bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300'>
@@ -329,7 +330,6 @@ export default function ExplorePage() {
 						</div>
 					</div>
 
-					{/* Filters (responsive) */}
 					<div className='mt-4 grid grid-cols-1 md:grid-cols-3 gap-3'>
 						<Input
 							placeholder='Search title, description or address...'
@@ -354,7 +354,6 @@ export default function ExplorePage() {
 				</header>
 
 				<div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
-					{/* Main list */}
 					<main className='lg:col-span-3'>
 						{initialLoading ? (
 							<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6'>
@@ -386,7 +385,6 @@ export default function ExplorePage() {
 							</div>
 						)}
 
-						{/* Loader / Manual load fallback */}
 						<div
 							ref={loaderRef}
 							className='h-14 flex justify-center items-center mt-6'
@@ -404,7 +402,6 @@ export default function ExplorePage() {
 									No more issues to show.
 								</span>
 							)}
-							{/* When observer not triggering for some reason, provide manual load */}
 							{hasMore && !loading && !initialLoading && (
 								<Button
 									onClick={() => setPage((p) => p + 1)}
@@ -416,7 +413,6 @@ export default function ExplorePage() {
 						</div>
 					</main>
 
-					{/* Sidebar (visible on large screens) */}
 					<aside className='hidden lg:block sticky top-20 self-start'>
 						<div className='w-full rounded-lg p-4 bg-white dark:bg-zinc-900 shadow-sm dark:shadow-black/40'>
 							<h4 className='font-semibold mb-2 text-zinc-900 dark:text-white'>
@@ -464,7 +460,6 @@ export default function ExplorePage() {
 							</div>
 						</div>
 
-						{/* Helpful tip / UX */}
 						<div className='mt-4 w-full rounded-lg p-4 bg-amber-50 dark:bg-zinc-800 shadow-sm dark:shadow-black/40'>
 							<p className='text-sm text-zinc-900 dark:text-zinc-100'>
 								Tip: use the search for fast filtering. Scroll

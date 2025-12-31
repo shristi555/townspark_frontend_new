@@ -19,6 +19,11 @@ export function LoginForm({ className, ...props }) {
 					Enter your email below to login to your account
 				</p>
 			</div>
+			{typeof validationError === "string" && (
+				<div className='p-3 text-sm bg-destructive/10 text-destructive border border-destructive/20 rounded-md text-center'>
+					{validationError}
+				</div>
+			)}
 			<div className='error text-red-600'>
 				{validationError?.unexpected &&
 					validationError.unexpected.join(", ")}

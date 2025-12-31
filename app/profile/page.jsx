@@ -19,27 +19,17 @@ import {
 	Clock,
 	CheckCircle2,
 } from "lucide-react";
-import AuthService from "@/services/auth_service";
+import { useNeedAuth } from "@/hooks/auth-check";
+import useAuthStore from "@/store/auth_store";
 
 const ProfilePage = () => {
-	const [profileData, setProfileData] = useState(null);
-	const [loading, setLoading] = useState(true);
+	const { loading: authLoading } = useNeedAuth();
+	const { fetchProfile, profileData, isLoading: storeLoading } = useAuthStore();
 	const router = useRouter();
 
 	useEffect(() => {
-		fetchProfileData();
-	}, []);
-
-	const fetchProfileData = async () => {
-		try {
-			const data = await AuthService.getMyInfo();
-			setProfileData(data.response);
-			setLoading(false);
-		} catch (error) {
-			console.error("Error fetching profile:", error);
-			setLoading(false);
-		}
-	};
+		fetchProfile();
+	}, [fetchProfile]);
 
 	const getCategoryColor = (category) => {
 		const colors = {
@@ -190,7 +180,7 @@ const ProfilePage = () => {
 		</Card>
 	);
 
-	if (loading || !profileData) {
+	if (authLoading || (storeLoading && !profileData) || !profileData) {
 		return (
 			<div className='flex items-center justify-center min-h-screen'>
 				<div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>

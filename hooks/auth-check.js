@@ -1,64 +1,93 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import useAuthStore from "@stores/auth_store";
 
 /**
- * Pages that should NOT be accessed when logged in
- * Example: login, register
+ * Hook for pages that should NOT be accessed when logged in (e.g., login, signup)
+ * Logic:
+ * 1. If not checked, run checkAuthStatus.
+ * 2. If authenticated, redirect to home.
+ * 3. Handle server errors by redirecting to error page.
  */
 export function useNoAuth() {
 	const router = useRouter();
-	const { checkAuthStatus } = useAuthStore();
-	const [loading, setLoading] = useState(true);
+	const { isAuthenticated, statusChecked, checkAuthStatus, isLoading } = useAuthStore();
+	const hasCheckedRef = useRef(false);
 
 	useEffect(() => {
-		(async function () {
-			const result = await checkAuthStatus();
+		let isMounted = true;
 
-			if (result?.ok) {
-				toast.warning("You are already logged in");
-				router.push("/");
-			}
+		const init = async () => {
+			if (!statusChecked && !hasCheckedRef.current) {
+				hasCheckedRef.current = true;
+				const res = await checkAuthStatus();
+				if (!isMounted) return;
 
-			if (result?.reason === "server") {
-				router.push("/error");
-			}
-
-			setLoading(false);
-		})();
-	}, [router, checkAuthStatus]);
-
-	return { loading };
-}
-
-/**
- * Pages that REQUIRE authentication
- * Example: dashboard, profile
- */
-export function useNeedAuth() {
-	const router = useRouter();
-	const { checkAuthStatus } = useAuthStore();
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		(async function () {
-			const result = await checkAuthStatus();
-
-			if (!result?.ok) {
-				if (result?.reason === "server") {
+				if (res?.reason === "server") {
 					router.push("/error");
-				} else {
-					toast.warning("Please login to continue");
-					router.push("/login");
+					return;
 				}
 			}
 
-			setLoading(false);
-		})();
-	}, [router, checkAuthStatus]);
+			if (statusChecked && isAuthenticated && isMounted) {
+				// No need for toast here as it's standard redirection
+				router.replace("/");
+			}
+		};
 
-	return { loading };
+		init();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [statusChecked, isAuthenticated, checkAuthStatus, router]);
+
+	return { loading: !statusChecked || isLoading };
+}
+
+/**
+ * Hook for pages that REQUIRE authentication (e.g., dashboard, profile)
+ * Logic:
+ * 1. If not checked, run checkAuthStatus.
+ * 2. If not authenticated, redirect to login with return path.
+ * 3. Handle server errors by redirecting to error page.
+ */
+export function useNeedAuth() {
+	const router = useRouter();
+	const pathname = usePathname();
+	const { isAuthenticated, statusChecked, checkAuthStatus, isLoading } = useAuthStore();
+	const hasCheckedRef = useRef(false);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const init = async () => {
+			if (!statusChecked && !hasCheckedRef.current) {
+				hasCheckedRef.current = true;
+				const res = await checkAuthStatus();
+				if (!isMounted) return;
+
+				if (res?.reason === "server") {
+					router.push(`/error?from=${encodeURIComponent(pathname)}`);
+					return;
+				}
+			}
+
+			if (statusChecked && !isAuthenticated && isMounted) {
+				toast.warning("Please login to access this page");
+				router.replace(`/login?from=${encodeURIComponent(pathname)}`);
+			}
+		};
+
+		init();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [statusChecked, isAuthenticated, checkAuthStatus, router, pathname]);
+
+	return { loading: !statusChecked || isLoading };
 }

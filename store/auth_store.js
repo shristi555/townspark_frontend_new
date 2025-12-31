@@ -1,207 +1,282 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import AuthService from "@/services/auth_service";
+import api from "@/services/api";
 
-function getErrorMessage(error, fallback = "Something went wrong") {
-	return error?.response?.data?.message || error?.message || fallback;
-}
+const AUTH_URLS = {
+	LOGIN: "/auth/login/",
+	REGISTER: "/auth/register/",
+	MYINFO: "/profile/",
+	REFRESH: "/auth/token/refresh/",
+	VERIFY: "/auth/token/verify/",
+	LOGOUT: "/auth/logout/",
+	UPDATE_PROFILE: "/auth/me/update/",
+};
 
-async function runWithLoading(set, fn) {
-	set({ isLoading: true, error: null });
-	try {
-		return await fn();
-	} catch (error) {
-		throw error;
-	} finally {
-		set({ isLoading: false });
+/**
+ * Extracts a human-readable error message or structural errors from the API response
+ */
+function extractError(err, fallback = "Internal Server Error") {
+	console.error("Auth Store Error:", err);
+
+	// The api.js interceptor returns an object like:
+	// { type, message, message_type, reached_server, status }
+	if (err && typeof err === "object") {
+		const { message, message_type } = err;
+
+		if (message_type === "str" || message_type === "string") {
+			return message || fallback;
+		}
+
+		if (message_type === "dict" || message_type === "object") {
+			// It's a validation error object
+			return message;
+		}
+
+		if (err.message) return err.message;
 	}
+
+	return err?.toString() || fallback;
 }
 
-function authStore(set, get) {
-	return {
-		// STATE
-		user: null,
-		isAuthenticated: false,
-		isLoading: false,
-		error: null,
-		statusChecked: false,
-
-		// BASIC MUTATORS
-		setUser: (user) =>
-			set({
-				user,
-				isAuthenticated: !!user,
-				error: null,
-			}),
-
-		clearUser: () =>
-			set({
-				user: null,
-				isAuthenticated: false,
-				error: null,
-			}),
-
-		setError: (error) => set({ error }),
-
-		login: async (email, password) =>
-			runWithLoading(set, async function () {
-				try {
-					const res = await AuthService.login(email, password);
-					const user = res.response.user;
-
-					set({
-						user,
-						isAuthenticated: true,
-						error: null,
-					});
-
-					return { success: true, data: user };
-				} catch (err) {
-					const error = getErrorMessage(err, "Login failed");
-					set({ user: null, isAuthenticated: false, error });
-					return { success: false, error };
-				}
-			}),
-
-		register: async (rawFormData) =>
-			runWithLoading(set, async function () {
-				const formData = Object.fromEntries(rawFormData.entries());
-
-				const validationErrors =
-					AuthService.validateRegisterData(formData);
-
-				if (validationErrors) {
-					set({
-						error: validationErrors.general || "Validation failed",
-					});
-					return { success: false, error: validationErrors };
-				}
-
-				try {
-					await AuthService.register(formData);
-					return await get().login(formData.email, formData.password);
-				} catch (err) {
-					const error = getErrorMessage(err, "Registration failed");
-					set({ error });
-					return { success: false, error };
-				}
-			}),
-
-		checkAuth: async () =>
-			runWithLoading(set, async function () {
-				try {
-					const res = await AuthService.getMyInfo();
-					set({
-						user: res.data,
-						isAuthenticated: true,
-					});
-					return true;
-				} catch {
-					set({ user: null, isAuthenticated: false });
-					return false;
-				}
-			}),
-
-		checkAuthStatus: async (forceRecheck = false) => {
-			console.log("Checking auth status, forceRecheck:", forceRecheck);
-			if (!forceRecheck) {
-				if (get().statusChecked) {
-					return get().isAuthenticated
-						? { ok: true }
-						: { ok: false, reason: "unauthenticated" };
-				}
-			}
-			try {
-				const res = await AuthService.verifyToken();
-				if (res?.response.user) {
-					set({
-						user: res.response.user,
-						isAuthenticated: true,
-						error: null,
-						statusChecked: true,
-					});
-					return { ok: true };
-				}
-			} catch (error) {
-				console.log("Auth check failed:", error);
-				if (!error?.reached_server) {
-					return { ok: false, reason: "server" };
-				}
-				// 401 or other client error
-				set({
-					user: null,
-					isAuthenticated: false,
-					statusChecked: true,
-				});
-				return { ok: false, reason: "unauthenticated" };
-			}
-		},
-
-		refreshToken: async () => {
-			try {
-				const res = await AuthService.refreshToken();
-				return { success: true, data: res.data };
-			} catch (err) {
-				const error = getErrorMessage(err, "Token refresh failed");
-				set({ error });
-				return { success: false, error };
-			}
-		},
-
-		verifyToken: async () => {
-			try {
-				const res = await AuthService.verifyToken();
-				return { success: true, data: res.data };
-			} catch (err) {
-				const error = getErrorMessage(err, "Token verification failed");
-				set({ error });
-				return { success: false, error };
-			}
-		},
-
-		updateProfile: async (formData) =>
-			runWithLoading(set, async function () {
-				try {
-					const res = await AuthService.updateProfile(formData);
-					set({ user: res.data });
-					return { success: true, data: res.data };
-				} catch (err) {
-					const error = getErrorMessage(err, "Profile update failed");
-					set({ error });
-					return { success: false, error };
-				}
-			}),
-
-		logout: async function () {
-			try {
-				await AuthService.logout();
-			} finally {
-				set({
-					user: null,
-					isAuthenticated: false,
-					error: null,
-				});
-			}
-		},
-
-		getUserId: () => get().user?.id,
-		getUserEmail: () => get().user?.email,
-		getUserFullName: () => get().user?.full_name,
-		getUserFirstName: () => get().user?.first_name,
-		getUserLastName: () => get().user?.last_name,
-		getUserPhoneNumber: () => get().user?.phone_number,
-		getUserProfilePic: () => get().user?.profile_pic,
-	};
-}
+const initialState = {
+	user: null,
+	profileData: null, // Full profile info including stats and issues
+	isAuthenticated: false,
+	isLoading: false,
+	error: null,
+	statusChecked: false,
+};
 
 const useAuthStore = create(
-	persist(authStore, {
-		name: "auth-storage",
-		partialize: (state) => ({
-			user: state.user,
-			isAuthenticated: state.isAuthenticated,
+	persist(
+		(set, get) => ({
+			...initialState,
+
+			// Actions
+			setLoading: (isLoading) => set({ isLoading }),
+			
+			setError: (error) => {
+				const processedError = extractError(error);
+				set({ error: processedError });
+				return processedError;
+			},
+
+			clearError: () => set({ error: null }),
+
+			/**
+			 * Login action
+			 */
+			login: async (email, password) => {
+				set({ isLoading: true, error: null });
+				try {
+					const res = await api.post(AUTH_URLS.LOGIN, { email, password });
+					// The backend structure is { success: true, response: { user: {...}, ... } }
+					const userData = res.response.user || res.response;
+					
+					set({
+						user: userData,
+						isAuthenticated: true,
+						error: null,
+						isLoading: false,
+						statusChecked: true,
+					});
+					return { success: true, user: userData };
+				} catch (err) {
+					const error = extractError(err, "Login failed. Please check your credentials.");
+					set({ 
+						user: null, 
+						isAuthenticated: false, 
+						error, 
+						isLoading: false,
+						statusChecked: true 
+					});
+					return { success: false, error };
+				}
+			},
+
+			/**
+			 * Register action
+			 */
+			register: async (formData) => {
+				set({ isLoading: true, error: null });
+				
+				const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+				
+				// Client-side validation
+				const errors = {};
+				if (!data.first_name || data.first_name.trim() === "") errors.first_name = "First name is required";
+				if (!data.email || data.email.trim() === "") errors.email = "Email address is required";
+				if (!data.password || data.password.trim() === "") errors.password = "Password is required";
+				if (data.terms !== "on" && !data.terms) errors.terms = "You must agree to the terms and conditions";
+
+				if (Object.keys(errors).length > 0) {
+					set({ error: errors, isLoading: false });
+					return { success: false, error: errors };
+				}
+
+				try {
+					await api.post(AUTH_URLS.REGISTER, {
+						first_name: data.first_name,
+						last_name: data.last_name || "",
+						email: data.email,
+						password: data.password,
+						phone_number: data.phone_number || null,
+					});
+
+					// After registration, we log in automatically
+					set({ isLoading: false });
+					return await get().login(data.email, data.password);
+				} catch (err) {
+					const error = extractError(err, "Registration failed.");
+					set({ error, isLoading: false });
+					return { success: false, error };
+				}
+			},
+
+			/**
+			 * Logout action
+			 */
+			logout: async () => {
+				set({ isLoading: true });
+				try {
+					await api.post(AUTH_URLS.LOGOUT);
+				} catch (err) {
+					console.error("Logout error:", err);
+				} finally {
+					set({
+						...initialState,
+						statusChecked: true,
+					});
+					// Optional: clear local storage if persist doesn't handle it
+				}
+			},
+
+			/**
+			 * Check authentication status (usually on app load)
+			 */
+			checkAuthStatus: async (forceRecheck = false) => {
+				if (get().statusChecked && !forceRecheck) {
+					return { ok: get().isAuthenticated };
+				}
+
+				set({ isLoading: true });
+				try {
+					const res = await api.post(AUTH_URLS.VERIFY);
+					const userData = res.response.user || res.response;
+					
+					set({
+						user: userData,
+						isAuthenticated: true,
+						statusChecked: true,
+						isLoading: false,
+						error: null,
+					});
+					return { ok: true };
+				} catch (err) {
+					set({
+						user: null,
+						isAuthenticated: false,
+						statusChecked: true,
+						isLoading: false,
+					});
+					return { ok: false, reason: err.reached_server ? "unauthenticated" : "server" };
+				}
+			},
+
+			/**
+			 * Refresh token if needed
+			 */
+			refreshToken: async () => {
+				try {
+					const res = await api.post(AUTH_URLS.REFRESH);
+					return { success: true, data: res.response };
+				} catch (err) {
+					return { success: false, error: extractError(err) };
+				}
+			},
+
+			/**
+			 * Update user profile
+			 */
+			updateProfile: async (formData) => {
+				set({ isLoading: true, error: null });
+				try {
+					const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
+					const res = await api.put(AUTH_URLS.UPDATE_PROFILE, data);
+					const updatedUser = res.response.user || res.response;
+					
+					set({ user: updatedUser, isLoading: false });
+					return { success: true, user: updatedUser };
+				} catch (err) {
+					const error = extractError(err, "Profile update failed.");
+					set({ error, isLoading: false });
+					return { success: false, error };
+				}
+			},
+
+			/**
+			 * Generic fetch user info (limited)
+			 */
+			fetchUser: async () => {
+				set({ isLoading: true });
+				try {
+					const res = await api.get(AUTH_URLS.MYINFO);
+					// Based on sample, response has the user object
+					const userData = res.response?.user || res.response;
+					set({ user: userData, isAuthenticated: true, isLoading: false });
+					return { success: true, user: userData };
+				} catch (err) {
+					set({ isLoading: false });
+					return { success: false, error: extractError(err) };
+				}
+			},
+
+			/**
+			 * Fetch complete profile info (full data)
+			 */
+			fetchProfile: async () => {
+				set({ isLoading: true, error: null });
+				try {
+					const res = await api.get(AUTH_URLS.MYINFO);
+					// res is the SRE object: { success, response, error, ... }
+					// response contains: { user, reported_issues, liked_issues, commented_issues, stats }
+					const profilePayload = res.response;
+					
+					set({ 
+						profileData: profilePayload, 
+						user: profilePayload?.user || get().user,
+						isAuthenticated: true, 
+						isLoading: false,
+						error: null 
+					});
+					return { success: true, data: profilePayload };
+				} catch (err) {
+					const error = extractError(err, "Failed to load profile.");
+					set({ error, isLoading: false });
+					return { success: false, error };
+				}
+			},
+
+			/**
+			 * Selectors
+			 */
+			getUserId: () => get().user?.id,
+			getUserEmail: () => get().user?.email,
+			getUserFullName: () => get().user?.full_name || `${get().user?.first_name || ""} ${get().user?.last_name || ""}`.trim(),
+			getUserFirstName: () => get().user?.first_name,
+			getUserLastName: () => get().user?.last_name,
+			getUserPhoneNumber: () => get().user?.phone_number,
+			getUserProfilePic: () => get().user?.profile_pic,
 		}),
-	})
+		{
+			name: "auth-storage",
+			partialize: (state) => ({
+				user: state.user,
+				isAuthenticated: state.isAuthenticated,
+				statusChecked: state.statusChecked,
+			}),
+		}
+	)
 );
 
 export default useAuthStore;

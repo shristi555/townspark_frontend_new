@@ -27,10 +27,10 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 import Image from "next/image";
 import logo from "@public/logo.png";
 import { toast } from "sonner";
-import AuthService from "@/services/auth_service";
 import useAuthStore from "@/store/auth_store";
 import { useEffect, useState } from "react";
 
@@ -133,13 +133,13 @@ export function AppSidebar() {
 											isActive={isActive}
 											tooltip={item.title}
 										>
-											<a
+											<Link
 												href={item.url}
 												className='flex items-center gap-3'
 											>
 												<Icon className='w-5 h-5' />
 												<span>{item.title}</span>
-											</a>
+											</Link>
 										</SidebarMenuButton>
 									</SidebarMenuItem>
 								);
@@ -165,13 +165,13 @@ export function AppSidebar() {
 											isActive={isActive}
 											tooltip={item.title}
 										>
-											<a
+											<Link
 												href={item.url}
 												className='flex items-center gap-3'
 											>
 												<Icon className='w-5 h-5' />
 												<span>{item.title}</span>
-											</a>
+											</Link>
 										</SidebarMenuButton>
 									</SidebarMenuItem>
 								);
@@ -189,11 +189,11 @@ export function AppSidebar() {
 						</AvatarFallback>
 					</Avatar>
 					<div className='flex-1 min-w-0'>
-						<p className='font-semibold text-sm truncate'>
-							{`${getUserFullName()} (ID: ${getUserId()})`}
+						<p className='font-semibold text-sm truncate uppercase'>
+							{getUserFullName() || "Guest User"}
 						</p>
 						<p className='text-xs text-muted-foreground truncate'>
-							{getUserEmail()}
+							{getUserEmail() || (getUserId() ? `ID: ${getUserId()}` : "Not logged in")}
 						</p>
 					</div>
 				</div>
