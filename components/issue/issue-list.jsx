@@ -27,6 +27,7 @@ import { formatDistanceToNow } from "date-fns";
 import BackButton from "../ui/back-button";
 import { ISSUE_CATEGORIES } from "./constants";
 import { CategoryBadge, StatusBadge, EmptyState } from "./shared-components";
+import { cn } from "@/lib/utils";
 
 //  Utility Components
 
@@ -89,10 +90,15 @@ function IssueMetadata({ issue }) {
 
 //  Card Components
 
+//  Card Components
+
 function IssueCard({ issue, onClick }) {
 	return (
 		<Card
-			className='group cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary/50'
+			className={cn(
+				'group cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary/50',
+				issue.is_archived ? 'opacity-70 bg-muted/50' : ''
+			)}
 			onClick={() => onClick(issue.id)}
 		>
 			<CardContent className='p-0'>
@@ -104,7 +110,7 @@ function IssueCard({ issue, onClick }) {
 							<h3 className='font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors'>
 								{issue.title}
 							</h3>
-							<StatusBadge isResolved={issue.is_resolved} />
+							<StatusBadge isResolved={issue.is_resolved} isArchived={issue.is_archived} />
 						</div>
 
 						<p className='text-sm text-muted-foreground line-clamp-2'>
@@ -140,7 +146,9 @@ function StatCard({ label, value, icon: Icon, colorClass }) {
 								? "bg-yellow-500/10"
 								: colorClass?.includes("green")
 									? "bg-green-500/10"
-									: "bg-primary/10"
+									: colorClass?.includes("zinc") 
+										? "bg-zinc-500/10" 
+										: "bg-primary/10"
 						}`}
 					>
 						<Icon
@@ -183,7 +191,7 @@ function ListHeader({ onCreateNew }) {
 
 function StatsSection({ stats }) {
 	return (
-		<div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6'>
+		<div className='grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
 			<StatCard label='Total Issues' value={stats.total} icon={Archive} />
 			<StatCard
 				label='Pending'
@@ -196,6 +204,12 @@ function StatsSection({ stats }) {
 				value={stats.resolved}
 				icon={CheckCircle2}
 				colorClass='text-green-600 dark:text-green-400'
+			/>
+			<StatCard
+				label='Archived'
+				value={stats.archived}
+				icon={Archive}
+				colorClass='text-zinc-500'
 			/>
 		</div>
 	);
@@ -231,6 +245,7 @@ function FilterSection({
 							<SelectItem value='all'>All Status</SelectItem>
 							<SelectItem value='pending'>Pending</SelectItem>
 							<SelectItem value='resolved'>Resolved</SelectItem>
+							<SelectItem value='archived'>Archived</SelectItem>
 						</SelectContent>
 					</Select>
 
@@ -296,10 +311,20 @@ function filterIssues(issues, searchQuery, statusFilter, categoryFilter) {
 			issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			issue.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-		const matchesStatus =
-			statusFilter === "all" ||
-			(statusFilter === "pending" && !issue.is_resolved) ||
-			(statusFilter === "resolved" && issue.is_resolved);
+		let matchesStatus = true;
+		if (statusFilter === "all") {
+			// Show all, usually including archived? Or exclude archived by default?
+			// Generally "My Issues" should show active ones primarily, but user said "options to archive".
+			// Let's include everything in 'all' but maybe user prefers seeing active only. 
+			// Let's stick to everything to avoid confusion where issues disappear.
+			matchesStatus = true;
+		} else if (statusFilter === "archived") {
+			matchesStatus = issue.is_archived;
+		} else if (statusFilter === "pending") {
+			matchesStatus = !issue.is_resolved && !issue.is_archived;
+		} else if (statusFilter === "resolved") {
+			matchesStatus = issue.is_resolved && !issue.is_archived;
+		}
 
 		const matchesCategory =
 			categoryFilter === "all" || issue.category === categoryFilter;
@@ -311,8 +336,9 @@ function filterIssues(issues, searchQuery, statusFilter, categoryFilter) {
 function calculateStats(issues) {
 	return {
 		total: issues.length,
-		pending: issues.filter((i) => !i.is_resolved).length,
-		resolved: issues.filter((i) => i.is_resolved).length,
+		pending: issues.filter((i) => !i.is_resolved && !i.is_archived).length,
+		resolved: issues.filter((i) => i.is_resolved && !i.is_archived).length,
+		archived: issues.filter((i) => i.is_archived).length,
 	};
 }
 
@@ -322,7 +348,8 @@ export default function IssueList({ issues, onIssueClick, onCreateNew }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [categoryFilter, setCategoryFilter] = useState("all");
-
+	// ... rest of component
+	
 	const filteredIssues = useMemo(
 		() => filterIssues(issues, searchQuery, statusFilter, categoryFilter),
 		[issues, searchQuery, statusFilter, categoryFilter]

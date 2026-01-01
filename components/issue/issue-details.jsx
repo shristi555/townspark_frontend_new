@@ -23,7 +23,9 @@ import {
 	Maximize2,
 	ChevronRight,
 	Badge,
+	Archive,
 } from "lucide-react";
+import { EditIssueDialog } from "./edit-issue-dialog";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -159,13 +161,17 @@ function ProgressTimelineItem({ update, isLast }) {
 	);
 }
 
+
+// ... existing imports
+
 export default function IssueDetails({
 	issue,
 	onBack,
 	onAddComment,
 	onToggleLike,
 	onDeleteIssue,
-	onUpdateIssue,
+	onArchiveIssue,
+	onIssueUpdated,
 }) {
 	const [comment, setComment] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,9 +212,38 @@ export default function IssueDetails({
 						<StatusBadge isResolved={issue.is_resolved} className="h-8 rounded-xl px-4 text-[10px] font-black" />
 						{canModifyIssue && (
 							<div className='flex items-center gap-2'>
-								<Button size='sm' variant='outline' onClick={onUpdateIssue} className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800'>
-									<Pencil className='w-3 h-3 mr-2' /> Edit
-								</Button>
+								<EditIssueDialog 
+									issue={issue} 
+									trigger={
+										<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800'>
+											<Pencil className='w-3 h-3 mr-2' /> Edit
+										</Button> 
+									}
+									onUpdateSuccess={onIssueUpdated}
+								/>
+								
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 text-amber-600 hover:text-amber-700 hover:bg-amber-50'>
+											<Archive className='w-3 h-3 mr-2' /> Archive
+										</Button>
+									</AlertDialogTrigger>
+									<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
+										<AlertDialogHeader>
+											<AlertDialogTitle className="text-xl font-black">Archive this issue?</AlertDialogTitle>
+											<AlertDialogDescription className="text-zinc-500">
+												This will hide the issue from the public explore feed. You can still view it in "My Issues".
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+											<AlertDialogAction onClick={onArchiveIssue} className="rounded-xl font-bold bg-amber-600 text-white hover:bg-amber-700 transition-all">
+												Confirm Archive
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
 										<Button size='sm' variant='destructive' className='h-8 rounded-xl text-xs font-bold shadow-lg shadow-red-500/20'>
