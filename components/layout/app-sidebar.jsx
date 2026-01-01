@@ -24,6 +24,7 @@ import {
 	SidebarGroupContent,
 	SidebarRail,
 } from "@/components/ui/sidebar";
+import { NotificationBell } from "@/components/notification-bell";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -182,6 +183,14 @@ export function AppSidebar() {
 			</SidebarContent>
 
 			<SidebarFooter className='border-t p-3'>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<NotificationBell isSidebar />
+					</SidebarMenuItem>
+				</SidebarMenu>
+
+				<Separator className='my-2' />
+
 				<div className='flex items-center gap-3 mb-3 px-2'>
 					<Avatar className='w-10 h-10'>
 						<AvatarFallback className='bg-primary/10 text-primary font-semibold'>

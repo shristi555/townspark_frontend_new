@@ -18,9 +18,13 @@ import {
 	Edit,
 	Clock,
 	CheckCircle2,
+	Bell,
 } from "lucide-react";
 import { useNeedAuth } from "@/hooks/auth-check";
 import useAuthStore from "@/store/auth_store";
+import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
+import { DeleteAccountDialog } from "@/components/profile/delete-account-dialog";
+import { NotificationList } from "@/components/profile/notification-list";
 
 const ProfilePage = () => {
 	const { loading: authLoading } = useNeedAuth();
@@ -192,7 +196,7 @@ const ProfilePage = () => {
 		profileData;
 
 	return (
-		<div className='container mx-auto px-4 py-8 max-w-7xl'>
+		<div className='container mx-auto px-4 py-8 max-w-7xl pb-32 md:pb-8'>
 			{/* Profile Header */}
 			<Card className='mb-6'>
 				<CardContent className='pt-6'>
@@ -223,14 +227,23 @@ const ProfilePage = () => {
 							</p>
 
 							<div className='flex flex-wrap gap-2 justify-center md:justify-start'>
-								<Button size='sm'>
-									<Edit className='w-4 h-4 mr-2' />
-									Edit Profile
-								</Button>
-								<Button size='sm' variant='outline'>
-									<Settings className='w-4 h-4 mr-2' />
-									Settings
-								</Button>
+								<EditProfileDialog 
+									user={user}
+									trigger={
+										<Button size='sm'>
+											<Edit className='w-4 h-4 mr-2' />
+											Edit Profile
+										</Button>
+									}
+								/>
+								<DeleteAccountDialog 
+									trigger={
+										<Button size='sm' variant='destructive' className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200">
+											<Settings className='w-4 h-4 mr-2' />
+											Delete Account
+										</Button>
+									}
+								/>
 							</div>
 						</div>
 					</div>
@@ -306,11 +319,12 @@ const ProfilePage = () => {
 
 			{/* Tabs Section */}
 			<Tabs defaultValue='reported' className='w-full'>
-				<TabsList className='grid w-full grid-cols-2 md:w-auto md:inline-grid'>
+				<TabsList className='grid w-full grid-cols-3 md:w-auto md:inline-grid'>
 					<TabsTrigger value='reported'>
 						My Reports ({reported_issues.count})
 					</TabsTrigger>
 					<TabsTrigger value='activity'>Activity</TabsTrigger>
+					<TabsTrigger value='notifications'>Notifications</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value='reported' className='space-y-4 mt-6'>
@@ -433,6 +447,10 @@ const ProfilePage = () => {
 							</CardContent>
 						</Card>
 					</div>
+				</TabsContent>
+
+				<TabsContent value='notifications' className='mt-6'>
+					<NotificationList />
 				</TabsContent>
 			</Tabs>
 		</div>
