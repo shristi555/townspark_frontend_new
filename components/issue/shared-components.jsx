@@ -21,14 +21,25 @@ export function CategoryBadge({ category }) {
 	);
 }
 
-export function StatusBadge({ isResolved }) {
+export function StatusBadge({ isResolved, isArchived, className }) {
+	if (isArchived) {
+		return (
+			<Badge
+				variant='outline'
+				className={`text-zinc-500 border-zinc-500 bg-zinc-500/10 flex items-center gap-1 text-xs ${className || ""}`}
+			>
+				{/* Archive icon is not imported here, but we can standardise or just use text */}
+				Archived
+			</Badge>
+		);
+	}
 	const statusConfig = STATUS_CONFIG[isResolved ? "resolved" : "pending"];
 	const StatusIcon = statusConfig.icon;
 
 	return (
 		<Badge
 			variant='outline'
-			className={`${statusConfig.color} flex items-center gap-1 text-xs`}
+			className={`${statusConfig.color} flex items-center gap-1 text-xs ${className || ""}`}
 		>
 			<StatusIcon className='w-3 h-3' />
 			{statusConfig.label}

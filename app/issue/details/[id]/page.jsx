@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import IssueService from "@/services/issue_service";
@@ -13,26 +13,26 @@ export default function IssueDetailsPage() {
 	const [issue, setIssue] = useState(null);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		const fetchIssueDetails = async () => {
-			try {
-				const response = await IssueService.getIssueDetails(params.id);
-				if (response.success) {
-					setIssue(response.response);
-				}
-			} catch (error) {
-				console.error("Error fetching issue details:", error);
-				toast.error("Failed to load issue details");
-				router.push("/issue/mine");
-			} finally {
-				setLoading(false);
+	const fetchIssueDetails = useCallback(async () => {
+		try {
+			const response = await IssueService.getIssueDetails(params.id);
+			if (response.success) {
+				setIssue(response.response);
 			}
-		};
+		} catch (error) {
+			console.error("Error fetching issue details:", error);
+			toast.error("Failed to load issue details");
+			router.push("/issue/mine");
+		} finally {
+			setLoading(false);
+		}
+	}, [params.id, router]);
 
+	useEffect(() => {
 		if (params.id) {
 			fetchIssueDetails();
 		}
-	}, [params.id, router]);
+	}, [params.id, fetchIssueDetails]);
 
 	const handleBack = () => {
 		router.back();
@@ -46,12 +46,7 @@ export default function IssueDetailsPage() {
 
 			await IssueService.postIssueComment(formData);
 			toast.success("Comment added successfully");
-
-			// Refresh issue details
-			const response = await IssueService.getIssueDetails(params.id);
-			if (response.success) {
-				setIssue(response.response);
-			}
+			fetchIssueDetails();
 		} catch (error) {
 			console.error("Error adding comment:", error);
 			toast.error("Failed to add comment");
@@ -64,12 +59,7 @@ export default function IssueDetailsPage() {
 			formData.append("issue_id", params.id);
 
 			await IssueService.toggleIssueLike(formData);
-
-			// Refresh issue details
-			const response = await IssueService.getIssueDetails(params.id);
-			if (response.success) {
-				setIssue(response.response);
-			}
+			fetchIssueDetails();
 		} catch (error) {
 			console.error("Error toggling like:", error);
 			toast.error("Failed to update like");
@@ -86,9 +76,16 @@ export default function IssueDetailsPage() {
 			toast.error("Failed to delete issue");
 		}
 	};
-
-	const handleUpdateIssue = () => {
-		router.push(`/issue/update/${params.id}`);
+	
+	const handleArchiveIssue = async () => {
+		try {
+			await IssueService.archiveIssue(params.id);
+			toast.success("Issue archived successfully");
+			router.push("/issue/mine"); // Or stay/refresh? Usually archive removes from list, so redirect or refresh knowing it might disappear from explore
+		} catch (error) {
+			console.error("Error archiving issue:", error);
+			toast.error("Failed to archive issue");
+		}
 	};
 
 	if (loading) {
@@ -106,7 +103,8 @@ export default function IssueDetailsPage() {
 			onAddComment={handleAddComment}
 			onToggleLike={handleToggleLike}
 			onDeleteIssue={handleDeleteIssue}
-			onUpdateIssue={handleUpdateIssue}
+			onArchiveIssue={handleArchiveIssue}
+			onIssueUpdated={fetchIssueDetails}
 		/>
 	);
 }
