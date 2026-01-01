@@ -62,7 +62,7 @@ const useAuthStore = create(
 
 			// Actions
 			setLoading: (isLoading) => set({ isLoading }),
-			
+
 			setError: (error) => {
 				const processedError = extractError(error);
 				set({ error: processedError });
@@ -77,10 +77,13 @@ const useAuthStore = create(
 			login: async (email, password) => {
 				set({ isLoading: true, error: null });
 				try {
-					const res = await api.post(AUTH_URLS.LOGIN, { email, password });
+					const res = await api.post(AUTH_URLS.LOGIN, {
+						email,
+						password,
+					});
 					// The backend structure is { success: true, response: { user: {...}, ... } }
 					const userData = res.response.user || res.response;
-					
+
 					set({
 						user: userData,
 						isAuthenticated: true,
@@ -90,13 +93,16 @@ const useAuthStore = create(
 					});
 					return { success: true, user: userData };
 				} catch (err) {
-					const error = extractError(err, "Login failed. Please check your credentials.");
-					set({ 
-						user: null, 
-						isAuthenticated: false, 
-						error, 
+					const error = extractError(
+						err,
+						"Login failed. Please check your credentials."
+					);
+					set({
+						user: null,
+						isAuthenticated: false,
+						error,
 						isLoading: false,
-						statusChecked: true 
+						statusChecked: true,
 					});
 					return { success: false, error };
 				}
@@ -107,15 +113,22 @@ const useAuthStore = create(
 			 */
 			register: async (formData) => {
 				set({ isLoading: true, error: null });
-				
-				const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
-				
+
+				const data =
+					formData instanceof FormData
+						? Object.fromEntries(formData.entries())
+						: formData;
+
 				// Client-side validation
 				const errors = {};
-				if (!data.first_name || data.first_name.trim() === "") errors.first_name = "First name is required";
-				if (!data.email || data.email.trim() === "") errors.email = "Email address is required";
-				if (!data.password || data.password.trim() === "") errors.password = "Password is required";
-				if (data.terms !== "on" && !data.terms) errors.terms = "You must agree to the terms and conditions";
+				if (!data.first_name || data.first_name.trim() === "")
+					errors.first_name = "First name is required";
+				if (!data.email || data.email.trim() === "")
+					errors.email = "Email address is required";
+				if (!data.password || data.password.trim() === "")
+					errors.password = "Password is required";
+				if (data.terms !== "on" && !data.terms)
+					errors.terms = "You must agree to the terms and conditions";
 
 				if (Object.keys(errors).length > 0) {
 					set({ error: errors, isLoading: false });
@@ -162,16 +175,12 @@ const useAuthStore = create(
 			/**
 			 * Check authentication status (usually on app load)
 			 */
-			checkAuthStatus: async (forceRecheck = false) => {
-				if (get().statusChecked && !forceRecheck) {
-					return { ok: get().isAuthenticated };
-				}
-
+			checkAuthStatus: async () => {
 				set({ isLoading: true });
 				try {
 					const res = await api.post(AUTH_URLS.VERIFY);
 					const userData = res.response.user || res.response;
-					
+
 					set({
 						user: userData,
 						isAuthenticated: true,
@@ -187,7 +196,12 @@ const useAuthStore = create(
 						statusChecked: true,
 						isLoading: false,
 					});
-					return { ok: false, reason: err.reached_server ? "unauthenticated" : "server" };
+					return {
+						ok: false,
+						reason: err.reached_server
+							? "unauthenticated"
+							: "server",
+					};
 				}
 			},
 
@@ -195,12 +209,8 @@ const useAuthStore = create(
 			 * Refresh token if needed
 			 */
 			refreshToken: async () => {
-				try {
-					const res = await api.post(AUTH_URLS.REFRESH);
-					return { success: true, data: res.response };
-				} catch (err) {
-					return { success: false, error: extractError(err) };
-				}
+				/// currently verify endpoint also refreshes tokens, so no separate
+				return get().checkAuthStatus();
 			},
 
 			/**
@@ -209,8 +219,11 @@ const useAuthStore = create(
 			updateProfile: async (formData) => {
 				set({ isLoading: true, error: null });
 				try {
-					const data = formData instanceof FormData ? Object.fromEntries(formData.entries()) : formData;
-					const res = await api.put(AUTH_URLS.UPDATE_PROFILE, data , {
+					const data =
+						formData instanceof FormData
+							? Object.fromEntries(formData.entries())
+							: formData;
+					const res = await api.put(AUTH_URLS.UPDATE_PROFILE, data, {
 						headers: {
 							"Content-Type": "multipart/form-data",
 						},
@@ -219,11 +232,11 @@ const useAuthStore = create(
 
 					/// the profile page relies on profile data object not user object
 					/// we need to update just the user field in the profile data object
-					
+
 					set({ user: updatedUser, isLoading: false });
-					
+
 					get().fetchProfile();
-					
+
 					return { success: true, user: updatedUser };
 				} catch (err) {
 					const error = extractError(err, "Profile update failed.");
@@ -241,7 +254,11 @@ const useAuthStore = create(
 					const res = await api.get(AUTH_URLS.MYINFO);
 					// Based on sample, response has the user object
 					const userData = res.response?.user || res.response;
-					set({ user: userData, isAuthenticated: true, isLoading: false });
+					set({
+						user: userData,
+						isAuthenticated: true,
+						isLoading: false,
+					});
 					return { success: true, user: userData };
 				} catch (err) {
 					set({ isLoading: false });
@@ -259,13 +276,13 @@ const useAuthStore = create(
 					// res is the SRE object: { success, response, error, ... }
 					// response contains: { user, reported_issues, liked_issues, commented_issues, stats }
 					const profilePayload = res.response;
-					
-					set({ 
-						profileData: profilePayload, 
+
+					set({
+						profileData: profilePayload,
 						user: profilePayload?.user || get().user,
-						isAuthenticated: true, 
+						isAuthenticated: true,
 						isLoading: false,
-						error: null 
+						error: null,
 					});
 					return { success: true, data: profilePayload };
 				} catch (err) {
@@ -310,10 +327,10 @@ const useAuthStore = create(
 			markNotificationRead: async (id) => {
 				try {
 					// Optimistic update
-					set(state => ({
-						notifications: state.notifications.map(n => 
+					set((state) => ({
+						notifications: state.notifications.map((n) =>
 							n.id === id ? { ...n, is_read: true } : n
-						)
+						),
 					}));
 					await api.put(AUTH_URLS.NOTIFICATION_READ(id));
 					return { success: true };
@@ -325,8 +342,11 @@ const useAuthStore = create(
 
 			markAllNotificationsRead: async () => {
 				try {
-					set(state => ({
-						notifications: state.notifications.map(n => ({ ...n, is_read: true }))
+					set((state) => ({
+						notifications: state.notifications.map((n) => ({
+							...n,
+							is_read: true,
+						})),
 					}));
 					await api.put(AUTH_URLS.NOTIFICATION_MARK_ALL_READ);
 					return { success: true };
@@ -337,8 +357,10 @@ const useAuthStore = create(
 
 			deleteNotification: async (id) => {
 				try {
-					set(state => ({
-						notifications: state.notifications.filter(n => n.id !== id)
+					set((state) => ({
+						notifications: state.notifications.filter(
+							(n) => n.id !== id
+						),
 					}));
 					await api.delete(AUTH_URLS.NOTIFICATION_DELETE(id));
 					return { success: true };
@@ -361,9 +383,12 @@ const useAuthStore = create(
 			 * Selectors
 			 */
 			getUserId: () => get().user?.id,
-			getUnreadCount: () => get().notifications.filter(n => !n.is_read).length,
+			getUnreadCount: () =>
+				get().notifications.filter((n) => !n.is_read).length,
 			getUserEmail: () => get().user?.email,
-			getUserFullName: () => get().user?.full_name || `${get().user?.first_name || ""} ${get().user?.last_name || ""}`.trim(),
+			getUserFullName: () =>
+				get().user?.full_name ||
+				`${get().user?.first_name || ""} ${get().user?.last_name || ""}`.trim(),
 			getUserFirstName: () => get().user?.first_name,
 			getUserLastName: () => get().user?.last_name,
 			getUserPhoneNumber: () => get().user?.phone_number,

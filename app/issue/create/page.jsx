@@ -54,8 +54,40 @@ export default function CreateIssuePage() {
 				}
 			} catch (error) {
 				console.error("Issue creation error:", error);
-				toast.error(error || "Failed to create issue");
-				setErrors({ general: error });
+
+				// Extract error message from different formats
+				let errorMessage = "Failed to create issue";
+				let errorDetails = error;
+
+				if (typeof error === "object" && error !== null) {
+					if (error.message) {
+						// Handle API error format
+						if (typeof error.message === "string") {
+							errorMessage = error.message;
+						} else if (typeof error.message === "object") {
+							// If message is an object, try to extract useful info
+							const messages = Object.values(error.message)
+								.flat()
+								.filter((msg) => typeof msg === "string");
+							if (messages.length > 0) {
+								errorMessage = messages[0];
+							}
+						} else if (Array.isArray(error.message)) {
+							errorMessage = error.message[0] || errorMessage;
+						}
+						errorDetails = error;
+					} else if (error.type) {
+						// Handle error with type but no message
+						errorMessage = error.type.replace(/_/g, " ");
+						errorDetails = error;
+					}
+				} else if (typeof error === "string") {
+					errorMessage = error;
+					errorDetails = error;
+				}
+
+				toast.error(errorMessage);
+				setErrors({ general: errorDetails });
 			} finally {
 				setIsSubmitting(false);
 			}
