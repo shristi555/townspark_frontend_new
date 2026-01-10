@@ -3,10 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function HeroSection() {
+export default function HeroSection({ stats, isLoading }) {
     const router = useRouter();
+
+    const displayStats = {
+        issues: stats?.issues_resolved > 0 ? `${stats.issues_resolved.toLocaleString()}+` : "150+",
+        cities: stats?.cities_connected > 0 ? `${stats.cities_connected}+` : "10+",
+        users: stats?.total_users > 0 ? `${stats.total_users.toLocaleString()}+` : "100+",
+    };
 
     return (
         <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -65,28 +71,45 @@ export default function HeroSection() {
 
                         <div className="flex items-center gap-8 pt-4">
                             <div>
-                                <p className="text-3xl font-bold">10k+</p>
+                                {isLoading ? (
+                                    <Skeleton className="h-9 w-16 mb-1" />
+                                ) : (
+                                    <p className="text-3xl font-bold">{displayStats.issues}</p>
+                                )}
                                 <p className="text-sm text-muted-foreground">
                                     Issues Resolved
                                 </p>
                             </div>
                             <div className="w-px h-12 bg-border" />
                             <div>
-                                <p className="text-3xl font-bold">50+</p>
+                                {isLoading ? (
+                                    <Skeleton className="h-9 w-12 mb-1" />
+                                ) : (
+                                    <p className="text-3xl font-bold">{displayStats.cities}</p>
+                                )}
                                 <p className="text-sm text-muted-foreground">
                                     Cities Connected
                                 </p>
                             </div>
                             <div className="w-px h-12 bg-border" />
                             <div>
-                                <p className="text-3xl font-bold">4.8★</p>
+                                <p className="text-3xl font-bold">4.8★</p> // Static for now as it's a rating
                                 <p className="text-sm text-muted-foreground">User Rating</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Right Content - Hero Image */}
-                    <div className="relative">
+           
+                </div>
+            </div>
+        </section>
+    );
+}
+
+
+export function HeroImage(){
+    return          <div className="relative">
                         <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary/20 to-blue-600/20 p-1">
                             <div className="relative h-[500px] bg-background rounded-xl overflow-hidden">
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -111,8 +134,4 @@ export default function HeroSection() {
                         <div className="absolute -top-4 -right-4 w-24 h-24 bg-primary/20 rounded-full blur-2xl animate-pulse" />
                         <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse delay-700" />
                     </div>
-                </div>
-            </div>
-        </section>
-    );
 }

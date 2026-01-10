@@ -11,16 +11,25 @@ import CTASection from "@/components/home/cta-section";
 import Footer from "@/components/home/footer";
 import useAuthStore from "@/store/auth_store";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import LandingService from "@/services/landing_service";
 
 export default function HomePage() {
 	const { isAuthenticated } = useAuthStore();
-
 	const router = useRouter();
+	const [landingData, setLandingData] = useState(null);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
 		if (isAuthenticated) {
 			router.push("/issue/explore");
+		} else {
+			const fetchData = async () => {
+				const data = await LandingService.getLandingData();
+				setLandingData(data);
+				setIsLoading(false);
+			};
+			fetchData();
 		}
 	}, [isAuthenticated, router]);
 
@@ -32,12 +41,12 @@ export default function HomePage() {
 		<div className='min-h-screen bg-gradient-to-b from-background via-background to-muted/20'>
 			<HomeHeader />
 			<main>
-				<HeroSection />
+				<HeroSection stats={landingData?.stats} isLoading={isLoading} />
 				<FeaturesSection />
 				<HowItWorksSection />
 				<WhoIsItForSection />
-				<StatsSection />
-				<TestimonialsSection />
+				<StatsSection stats={landingData?.stats} isLoading={isLoading} />
+				<TestimonialsSection testimonials={landingData?.testimonials} isLoading={isLoading} />
 				<CTASection />
 			</main>
 			<Footer />

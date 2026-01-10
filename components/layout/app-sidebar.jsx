@@ -9,7 +9,7 @@ import {
 	BarChart3,
 	User,
 	LogOut,
-	HelpCircle,
+	Heart,
 } from "lucide-react";
 import {
 	Sidebar,
@@ -70,9 +70,9 @@ const secondaryNavItems = [
 		url: "/profile",
 	},
 	{
-		title: "Help & Support",
-		icon: HelpCircle,
-		url: "/help",
+		title: "Rate Townspark",
+		icon: Heart,
+		url: "/rate",
 	},
 ];
 
