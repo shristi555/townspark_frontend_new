@@ -24,11 +24,11 @@ export const metadata = {
 		"Report issues, track progress, and connect with local authorities",
 };
 
- const originalError = console.error;
+const originalError = console.error;
 
-  console.error = (...args) => {
-    originalError(...args);
-  };
+console.error = (...args) => {
+	originalError(...args);
+};
 
 export default function RootLayout({ children }) {
 	return (
