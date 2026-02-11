@@ -36,6 +36,14 @@ import { useNeedAuth } from "@/hooks/auth-check";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+
 async function exploreIssue(page = 1, page_size = 10, params = {}) {
 	try {
 		const query = new URLSearchParams({
@@ -43,7 +51,7 @@ async function exploreIssue(page = 1, page_size = 10, params = {}) {
 			page_size: String(page_size),
 			...params,
 		}).toString();
-		
+
 		const resp = await api.get(`/profile/explore/?${query}`);
 		if (resp.success) {
 			return resp.response;
@@ -57,7 +65,7 @@ async function exploreIssue(page = 1, page_size = 10, params = {}) {
 function IssueCard({ issue }) {
 	const firstImage =
 		issue.images && issue.images.length > 0
-			? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '') + issue.images[0].image
+			? (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '') + issue.images[0].image
 			: null;
 
 	return (
@@ -69,7 +77,7 @@ function IssueCard({ issue }) {
 			transition={{ duration: 0.3 }}
 		>
 			<Link href={`/issue/details/${issue.id}`}>
-				<Card className='group h-full flex flex-col overflow-hidden border-border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer'>
+				<Card className='group h-full flex flex-col overflow-hidden border-border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer rounded-2xl'>
 					{/* Image Overlay Header */}
 					<div className='relative h-56 overflow-hidden'>
 						{firstImage ? (
@@ -88,8 +96,8 @@ function IssueCard({ issue }) {
 						<div className='absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none'>
 							<Badge className={cn(
 								"px-3 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg border-0",
-								issue.is_resolved 
-									? "bg-emerald-500 text-white" 
+								issue.is_resolved
+									? "bg-emerald-500 text-white"
 									: "bg-amber-500 text-white"
 							)}>
 								{issue.is_resolved ? (
@@ -146,7 +154,7 @@ function IssueCard({ issue }) {
 								<span className='text-xs font-semibold text-zinc-500'>{issue.comments_count}</span>
 							</div>
 						</div>
-						
+
 						<div className='flex -space-x-2'>
 							<Avatar className='w-6 h-6 border-2 border-white dark:border-zinc-900 ring-2 ring-primary/20'>
 								<AvatarFallback className='text-[10px] bg-primary text-white font-bold'>
@@ -163,7 +171,7 @@ function IssueCard({ issue }) {
 
 function IssueSkeleton() {
 	return (
-		<Card className='overflow-hidden animate-pulse border-zinc-200 dark:border-zinc-800'>
+		<Card className='overflow-hidden animate-pulse border-zinc-200 dark:border-zinc-800 rounded-2xl'>
 			<Skeleton className='h-56 w-full' />
 			<div className='p-5 space-y-4'>
 				<Skeleton className='h-6 w-3/4' />
@@ -188,6 +196,9 @@ export default function ExplorePage() {
 	const [search, setSearch] = useState("");
 	const [category, setCategory] = useState("");
 	const [sortBy, setSortBy] = useState("newest");
+	const [startDate, setStartDate] = useState(null);
+	const [endDate, setEndDate] = useState(null);
+
 	const loaderRef = useRef(null);
 	const { theme } = useTheme();
 
@@ -207,16 +218,16 @@ export default function ExplorePage() {
 		[pageSize]
 	);
 
+	// Fetch base data (infinite scroll)
 	useEffect(() => {
-		// Fetch with filters
+		// Only trigger reset/initial fetch when SortBy changes
+		// Search and Category are now local!
 		const filters = {};
-		if (search) filters.search = search;
-		if (category) filters.category = category;
 		if (sortBy) filters.ordering = sortBy === "newest" ? "-created_at" : "created_at";
-		
+
 		fetchIssues(1, filters);
 		setPage(1);
-	}, [search, category, sortBy, fetchIssues]);
+	}, [sortBy, fetchIssues]);
 
 	useEffect(() => {
 		if (!hasMore || loading) return;
@@ -237,17 +248,44 @@ export default function ExplorePage() {
 	useEffect(() => {
 		if (page > 1) {
 			const filters = {};
-			if (search) filters.search = search;
-			if (category) filters.category = category;
 			if (sortBy) filters.ordering = sortBy === "newest" ? "-created_at" : "created_at";
 			fetchIssues(page, filters);
 		}
-	}, [page, fetchIssues, search, category, sortBy]);
+	}, [page, fetchIssues, sortBy]);
+
+	// Local filtering logic
+	const filteredIssues = useMemo(() => {
+		return issues.filter((issue) => {
+			const matchesSearch = !search ||
+				issue.title.toLowerCase().includes(search.toLowerCase()) ||
+				issue.description.toLowerCase().includes(search.toLowerCase()) ||
+				(issue.address && issue.address.toLowerCase().includes(search.toLowerCase()));
+
+			const matchesCategory = !category || issue.category === category;
+
+			let matchesDate = true;
+			if (startDate || endDate) {
+				const issueDate = new Date(issue.created_at);
+				if (startDate && endDate) {
+					matchesDate = isWithinInterval(issueDate, {
+						start: startOfDay(startDate),
+						end: endOfDay(endDate)
+					});
+				} else if (startDate) {
+					matchesDate = issueDate >= startOfDay(startDate);
+				} else if (endDate) {
+					matchesDate = issueDate <= endOfDay(endDate);
+				}
+			}
+
+			return matchesSearch && matchesCategory && matchesDate;
+		});
+	}, [issues, search, category, startDate, endDate]);
 
 	if (authLoading) {
 		return (
 			<div className='flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-950'>
-				<motion.div 
+				<motion.div
 					animate={{ rotate: 360 }}
 					transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
 					className='w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full'
@@ -287,45 +325,95 @@ export default function ExplorePage() {
 					</motion.p>
 
 					{/* Search & Filters Bar */}
-					<motion.div 
+					<motion.div
 						initial={{ opacity: 0, scale: 0.9 }}
 						animate={{ opacity: 1, scale: 1 }}
 						transition={{ delay: 0.3 }}
-						className='max-w-4xl mx-auto'
+						className='max-w-5xl mx-auto'
 					>
-						<div className='flex flex-col md:flex-row gap-3 p-3 bg-card rounded-2xl shadow-2xl shadow-primary/5 border border-border'>
-							<div className='flex-1 relative group'>
-								<FaSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-primary transition-colors' />
-								<Input
-									placeholder='Search by problem, address, or keyword...'
-									value={search}
-									onChange={(e) => setSearch(e.target.value)}
-									className='pl-12 h-14 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary rounded-xl'
-								/>
-							</div>
-							<div className='flex gap-2'>
-								<select
-									aria-label='Category'
-									value={category}
-									onChange={(e) => setCategory(e.target.value)}
-									className='h-14 px-4 bg-muted/50 border-0 rounded-xl text-sm font-medium focus:ring-1 ring-primary transition-all outline-none min-w-[140px]'
-								>
-									<option value='' className="bg-card">All Categories</option>
-									<option value='water' className="bg-card">Water</option>
-									<option value='road' className="bg-card">Roads</option>
-									<option value='drainage' className="bg-card">Drainage</option>
-									<option value='streetlight' className="bg-card">Street Lights</option>
-									<option value='garbage' className="bg-card">Garbage</option>
-								</select>
-								<select
-									aria-label='Sort'
-									value={sortBy}
-									onChange={(e) => setSortBy(e.target.value)}
-									className='h-14 px-4 bg-muted/50 border-0 rounded-xl text-sm font-medium focus:ring-1 ring-primary transition-all outline-none min-w-[140px]'
-								>
-									<option value='newest' className="bg-card">Newest First</option>
-									<option value='oldest' className="bg-card">Oldest First</option>
-								</select>
+						<div className='flex flex-col gap-4 p-4 bg-card rounded-3xl shadow-2xl shadow-primary/5 border border-border'>
+							<div className='flex flex-col md:flex-row gap-3'>
+								<div className='flex-1 relative group'>
+									<FaSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-primary transition-colors' />
+									<Input
+										placeholder='Search by problem, address, or keyword...'
+										value={search}
+										onChange={(e) => setSearch(e.target.value)}
+										className='pl-12 h-14 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary rounded-2xl'
+									/>
+								</div>
+
+								{/* Luxury Date Picker */}
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button
+											variant="ghost"
+											className="h-14 px-6 bg-muted/50 hover:bg-muted border-0 rounded-2xl text-sm font-medium flex items-center gap-3 transition-all"
+										>
+											<BsCalendar3 className="text-primary h-4 w-4" />
+											{startDate ? (
+												endDate ? (
+													<span className="text-zinc-600 dark:text-zinc-300">
+														{format(startDate, "MMM d")} - {format(endDate, "MMM d")}
+													</span>
+												) : (
+													<span>{format(startDate, "MMM d")}</span>
+												)
+											) : <span className="text-zinc-400">Date Range</span>}
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent className="w-auto p-0 rounded-3xl shadow-2xl border-border overflow-hidden" align="end">
+										<div className="p-4 bg-primary/5 border-b border-border">
+											<h4 className="font-black text-xs uppercase tracking-widest text-primary">Select Range</h4>
+										</div>
+										<CalendarComponent
+											initialFocus
+											mode="range"
+											selected={{ from: startDate, to: endDate }}
+											onSelect={(range) => {
+												setStartDate(range?.from);
+												setEndDate(range?.to);
+											}}
+											className="p-3"
+										/>
+										{(startDate || endDate) && (
+											<div className="p-2 border-t border-border bg-muted/20">
+												<Button
+													variant="ghost"
+													className="w-full text-[10px] font-black uppercase tracking-tighter text-destructive hover:text-destructive hover:bg-destructive/5"
+													onClick={() => { setStartDate(null); setEndDate(null); }}
+												>
+													Clear Dates
+												</Button>
+											</div>
+										)}
+									</PopoverContent>
+								</Popover>
+
+								<div className='flex gap-2'>
+									<select
+										aria-label='Category'
+										value={category}
+										onChange={(e) => setCategory(e.target.value)}
+										className='h-14 px-4 bg-muted/50 border-0 rounded-2xl text-sm font-black focus:ring-1 ring-primary transition-all outline-none min-w-[140px]'
+									>
+										<option value='' className="bg-card">All Categories</option>
+										<option value='water' className="bg-card">Water</option>
+										<option value='road' className="bg-card">Roads</option>
+										<option value='drainage' className="bg-card">Drainage</option>
+										<option value='streetlight' className="bg-card">Street Lights</option>
+										<option value='garbage' className="bg-card">Garbage</option>
+									</select>
+									<select
+										aria-label='Sort'
+										value={sortBy}
+										onChange={(e) => setSortBy(e.target.value)}
+										className='h-14 px-4 bg-muted/50 border-0 rounded-2xl text-sm font-black focus:ring-1 ring-primary transition-all outline-none min-w-[140px]'
+									>
+										<option value='newest' className="bg-card">Newest First</option>
+										<option value='oldest' className="bg-card">Oldest First</option>
+									</select>
+								</div>
 							</div>
 						</div>
 					</motion.div>
@@ -336,11 +424,11 @@ export default function ExplorePage() {
 			<div className='container mx-auto px-4 pb-20'>
 				<div className='flex items-center justify-between mb-8 pb-4 border-b border-border'>
 					<h2 className='text-sm font-bold uppercase tracking-widest text-muted-foreground'>
-						Active Issues ({issues.length})
+						Discover Issues ({filteredIssues.length})
 					</h2>
 					<div className='flex items-center gap-2'>
 						<div className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse' />
-						<span className='text-xs font-medium text-emerald-600 dark:text-emerald-500'>Real-time data</span>
+						<span className='text-xs font-medium text-emerald-600 dark:text-emerald-500'>Local filter active</span>
 					</div>
 				</div>
 
@@ -350,29 +438,29 @@ export default function ExplorePage() {
 							<IssueSkeleton key={i} />
 						))}
 					</div>
-				) : issues.length === 0 ? (
-					<motion.div 
+				) : filteredIssues.length === 0 ? (
+					<motion.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
-						className='py-20 text-center rounded-3xl bg-muted/30 border-2 border-dashed border-border'
+						className='py-20 text-center rounded-[2.5rem] bg-muted/30 border-2 border-dashed border-border'
 					>
 						<div className='inline-flex p-6 rounded-full bg-card shadow-xl mb-6'>
 							<FaSearch className='text-4xl text-zinc-300' />
 						</div>
 						<h3 className='text-xl font-bold mb-2'>No issues found</h3>
-						<p className='text-zinc-500'>Try adjusting your keywords or category filters.</p>
-						<Button 
-							variant='link' 
-							onClick={() => {setSearch(""); setCategory("");}}
-							className='mt-4'
+						<p className='text-zinc-500'>Try adjusting your keywords, date range, or category filters.</p>
+						<Button
+							variant='link'
+							onClick={() => { setSearch(""); setCategory(""); setStartDate(null); setEndDate(null); }}
+							className='mt-4 font-bold'
 						>
-							Clear all filters
+							Clear all local filters
 						</Button>
 					</motion.div>
 				) : (
 					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
 						<AnimatePresence mode='popLayout'>
-							{issues.map((issue) => (
+							{filteredIssues.map((issue) => (
 								<IssueCard
 									key={issue.id}
 									issue={issue}
@@ -397,7 +485,7 @@ export default function ExplorePage() {
 							<span className='text-xs font-bold uppercase tracking-widest text-zinc-500'>Discovering more issues</span>
 						</div>
 					)}
-					
+
 					{!hasMore && !loading && issues.length > 0 && (
 						<div className='flex flex-col items-center gap-4 py-8 px-12 rounded-2xl bg-muted/50 border border-border'>
 							<p className='text-sm text-muted-foreground font-medium'>You've explored everything for now!</p>

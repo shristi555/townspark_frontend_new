@@ -15,9 +15,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function AppNavbar() {
 	const { toggleSidebar } = useSidebar();
+	const router = useRouter();
+	const [searchQuery, setSearchQuery] = useState("");
+
+	const handleSearch = (e) => {
+		if (e.key === "Enter" && searchQuery.trim()) {
+			router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+		}
+	};
 
 	return (
 		<header className='sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
@@ -37,8 +47,11 @@ export function AppNavbar() {
 					<div className='relative'>
 						<Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
 						<Input
-							placeholder='Search issues, locations...'
+							placeholder='Search issues, people...'
 							className='pl-10 pr-4'
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							onKeyDown={handleSearch}
 						/>
 					</div>
 				</div>
@@ -54,7 +67,12 @@ export function AppNavbar() {
 					<NotificationBell />
 
 					{/* Mobile Search Button */}
-					<Button variant='ghost' size='icon' className='md:hidden'>
+					<Button
+						variant='ghost'
+						size='icon'
+						className='md:hidden'
+						onClick={() => router.push("/search")}
+					>
 						<Search className='w-5 h-5' />
 					</Button>
 				</div>

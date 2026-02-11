@@ -14,6 +14,7 @@ import {
 	Clock,
 	CheckCircle2,
 	Archive,
+	ArrowRight,
 } from "lucide-react";
 import {
 	Select,
@@ -264,6 +265,16 @@ function FilterSection({
 							))}
 						</SelectContent>
 					</Select>
+				</div>
+				<div className='mt-4 flex justify-end'>
+					<Button
+						variant='link'
+						size='sm'
+						className='text-xs font-bold'
+						onClick={() => window.location.href = '/search'}
+					>
+						Need more filters? Try Advanced Search <ArrowRight className='w-3 h-3 ml-1' />
+					</Button>
 				</div>
 			</CardContent>
 		</Card>
