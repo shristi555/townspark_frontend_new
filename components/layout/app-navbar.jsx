@@ -21,13 +21,6 @@ import { useRouter } from "next/navigation";
 export function AppNavbar() {
 	const { toggleSidebar } = useSidebar();
 	const router = useRouter();
-	const [searchQuery, setSearchQuery] = useState("");
-
-	const handleSearch = (e) => {
-		if (e.key === "Enter" && searchQuery.trim()) {
-			router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-		}
-	};
 
 	return (
 		<header className='sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
@@ -42,39 +35,27 @@ export function AppNavbar() {
 					<Menu className='w-5 h-5' />
 				</Button>
 
-				{/* Search Bar */}
-				<div className='flex-1 max-w-md hidden md:block'>
-					<div className='relative'>
-						<Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
-						<Input
-							placeholder='Search issues, people...'
-							className='pl-10 pr-4'
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							onKeyDown={handleSearch}
-						/>
-					</div>
-				</div>
-
-				<div className='flex-1 md:hidden' />
+				{/* Logo / Title Area (Optional, currently just space) */}
+				<div className='flex-1' />
 
 				{/* Right Actions */}
 				<div className='flex items-center gap-2'>
+					{/* Search Icon Button - Now on right for all screens */}
+					<Button
+						variant='ghost'
+						size='icon'
+						className='rounded-full hover:bg-muted'
+						onClick={() => router.push("/search")}
+						title="Search"
+					>
+						<Search className='w-5 h-5' />
+					</Button>
+
 					{/* Theme Toggle */}
 					<ThemeToggle />
 
 					{/* Notifications */}
 					<NotificationBell />
-
-					{/* Mobile Search Button */}
-					<Button
-						variant='ghost'
-						size='icon'
-						className='md:hidden'
-						onClick={() => router.push("/search")}
-					>
-						<Search className='w-5 h-5' />
-					</Button>
 				</div>
 			</div>
 		</header>
