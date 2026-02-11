@@ -42,7 +42,14 @@ function handleSuccessResponse(response) {
 	const data = response.data;
 
 	if (typeof data?.success !== "boolean") {
-		return Promise.reject(standardizeError({ message: "Invalid response format" }, response.status, true));
+		// If the response is successful (2xx) but doesn't follow the SRE format,
+		// wrap it ourselves so the rest of the app can handle it normally.
+		// This handles 204 No Content and other standard REST responses.
+		return {
+			success: true,
+			response: data,
+			error: null
+		};
 	}
 
 	if (data.success === false) {
@@ -59,8 +66,8 @@ async function handleErrorResponse(error) {
 
 	if (!response) {
 		// Network error or timeout
-		return Promise.reject(standardizeError({ 
-			message: "Could not reach the server. Please check your connection." 
+		return Promise.reject(standardizeError({
+			message: "Could not reach the server. Please check your connection."
 		}, null, false));
 	}
 
@@ -71,8 +78,8 @@ async function handleErrorResponse(error) {
 	}
 
 	// Fallback for non-SRE compliant error responses (like 404 HTML or 500 error)
-	return Promise.reject(standardizeError({ 
-		message: `Server responded with status ${response.status}` 
+	return Promise.reject(standardizeError({
+		message: `Server responded with status ${response.status}`
 	}, response.status, true));
 }
 
