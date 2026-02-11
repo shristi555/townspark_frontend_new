@@ -7,6 +7,9 @@ import Link from "next/link";
 import Image from "next/image";
 import logo from "@public/logo.png";
 import { useRouter } from "next/navigation";
+	import dynamic from "next/dynamic";
+
+
 
 const navigation = [
 	{ name: "Features", href: "#features" },
@@ -17,44 +20,49 @@ const navigation = [
 
 export default function HomeHeader() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-	const [scrolled, setScrolled] = useState(false);
 	const router = useRouter();
+	
+	const [scrolled, setScrolled] = useState(false);
+	const [mounted, setMounted] = useState(false);
 
-	useEffect(() => {
-		const handleScroll = () => {
-			setScrolled(window.scrollY > 20);
-		};
-		window.addEventListener("scroll", handleScroll);
-		return () => window.removeEventListener("scroll", handleScroll);
-	}, []);
+useEffect(() => {
+  setMounted(true);
 
-	const handleNavClick = (href) => {
-		setMobileMenuOpen(false);
-		const element = document.querySelector(href);
-		if (element) {
-			element.scrollIntoView({ behavior: "smooth" });
-		}
-	};
+  const handleScroll = () => {
+    setScrolled(window.scrollY > 20);
+  };
+
+  handleScroll(); // run once on mount
+  window.addEventListener("scroll", handleScroll);
+
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+
+
+
+const LogoImage = dynamic(() => import("next/image"), {
+  ssr: false,
+});
+
 
 	return (
 		<header
-			className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-				scrolled
-					? "bg-background/80 backdrop-blur-lg border-b border-border shadow-lg"
-					: "bg-transparent"
-			}`}
-		>
+  className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    mounted && scrolled
+      ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-lg"
+      : "bg-transparent"
+  }` }
+  suppressHydrationWarning
+>
+
 			<nav className='container mx-auto px-4 sm:px-6 lg:px-8'>
 				<div className='flex items-center justify-between h-16'>
 					{/* Logo */}
 					<Link href='/' className='flex items-center gap-2'>
 						<div className='w-10 h-10 relative'>
-							<Image
-								src={logo}
-								alt='Townspark'
-								fill
-								className='object-contain'
-							/>
+							<LogoImage src={logo} alt="Townspark" fill />
+
 						</div>
 						<span className='text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent'>
 							Townspark
@@ -95,7 +103,7 @@ export default function HomeHeader() {
 						{mobileMenuOpen ? (
 							<X className='w-6 h-6' />
 						) : (
-							<Menu className='w-6 h-6' />
+							<Menu className='w-6 h-6' suppressHydrationWarning />
 						)}
 					</button>
 				</div>

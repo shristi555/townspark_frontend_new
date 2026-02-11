@@ -24,6 +24,12 @@ export const metadata = {
 		"Report issues, track progress, and connect with local authorities",
 };
 
+ const originalError = console.error;
+
+  console.error = (...args) => {
+    originalError(...args);
+  };
+
 export default function RootLayout({ children }) {
 	return (
 		<html lang='en' suppressHydrationWarning>
@@ -37,7 +43,7 @@ export default function RootLayout({ children }) {
 					disableTransitionOnChange
 				>
 					<AuthProvider>
-						<AppLayout>{children}</AppLayout>
+						<AppLayout suppressHydrationWarning>{children}</AppLayout>
 					</AuthProvider>
 					<Toaster />
 				</ThemeProvider>

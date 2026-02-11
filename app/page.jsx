@@ -39,15 +39,15 @@ export default function HomePage() {
 
 	return (
 		<div className='min-h-screen bg-gradient-to-b from-background via-background to-muted/20'>
-			<HomeHeader />
+			<HomeHeader suppressHydrationWarning />
 			<main>
 				<HeroSection stats={landingData?.stats} isLoading={isLoading} />
-				<FeaturesSection />
-				<HowItWorksSection />
-				<WhoIsItForSection />
-				<StatsSection stats={landingData?.stats} isLoading={isLoading} />
-				<TestimonialsSection testimonials={landingData?.testimonials} isLoading={isLoading} />
-				<CTASection />
+				<FeaturesSection suppressHydrationWarning/>
+				<HowItWorksSection suppressHydrationWarning/>
+				<WhoIsItForSection suppressHydrationWarning/>
+				<StatsSection stats={landingData?.stats} isLoading={isLoading} suppressHydrationWarning/>
+				<TestimonialsSection testimonials={landingData?.testimonials} isLoading={isLoading} suppressHydrationWarning/>
+				<CTASection suppressHydrationWarning/>
 			</main>
 			<Footer />
 		</div>
