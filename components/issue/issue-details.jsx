@@ -371,14 +371,21 @@ export default function IssueDetails({
 							<div className='space-y-4'>
 								{issue.comments?.map((c) => (
 									<div key={c.id} className='flex gap-4 p-5 rounded-3xl bg-card border border-border hover:border-primary/20 transition-all'>
-										<Avatar className='w-10 h-10 border-2 border-zinc-100 dark:border-zinc-800'>
-											<AvatarFallback className='bg-primary/5 text-primary text-xs font-bold'>
-												{c.user?.[0]?.toUpperCase()}
-											</AvatarFallback>
-										</Avatar>
+										<Link href={`/profile/${c.user_id}`} className="shrink-0">
+											<Avatar className='w-10 h-10 border-2 border-zinc-100 dark:border-zinc-800 hover:scale-105 transition-transform'>
+												{c.user_pic ? (
+													<AvatarImage src={c.user_pic} alt={c.user_name || c.user} />
+												) : null}
+												<AvatarFallback className='bg-primary/5 text-primary text-xs font-bold'>
+													{(c.user_name || c.user)?.[0]?.toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+										</Link>
 										<div className='flex-1 space-y-1.5'>
 											<div className='flex items-center justify-between'>
-												<span className='text-sm font-black'>{c.user}</span>
+												<Link href={`/profile/${c.user_id}`} className='text-sm font-black hover:text-primary transition-colors'>
+													{c.user_name || c.user}
+												</Link>
 												<span className='text-[10px] text-zinc-400 font-bold uppercase'>{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</span>
 											</div>
 											<p className='text-sm text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed'>{c.text}</p>
@@ -440,12 +447,23 @@ export default function IssueDetails({
 								<CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Reporter Info</CardTitle>
 							</CardHeader>
 							<CardContent className='flex items-center gap-4 border-t border-border pt-6'>
-								<Avatar className='w-14 h-14 border-2 border-background shadow-xl'>
-									<AvatarFallback className='bg-muted text-muted-foreground font-black text-lg'>{issue.reported_by?.[0]?.toUpperCase()}</AvatarFallback>
-								</Avatar>
-								<div>
-									<h4 className='font-black text-base'>{issue.reported_by?.split('@')[0]}</h4>
-									<p className='text-xs text-zinc-500 font-bold'>{issue.reported_by}</p>
+								<Link href={`/profile/${issue.reported_by_id}`}>
+									<Avatar className='w-14 h-14 border-2 border-background shadow-xl hover:scale-105 transition-transform cursor-pointer'>
+										{issue.reported_by_pic ? (
+											<AvatarImage src={issue.reported_by_pic} alt={issue.reported_by_name || issue.reported_by} />
+										) : null}
+										<AvatarFallback className='bg-muted text-muted-foreground font-black text-lg'>
+											{(issue.reported_by_name || issue.reported_by)?.[0]?.toUpperCase()}
+										</AvatarFallback>
+									</Avatar>
+								</Link>
+								<div className='flex flex-col'>
+									<Link href={`/profile/${issue.reported_by_id}`} className="hover:underline">
+										<h4 className='font-black text-base hover:text-primary transition-colors'>
+											{issue.reported_by_name || issue.reported_by?.split('@')[0]}
+										</h4>
+									</Link>
+									<p className='text-xs text-zinc-500 font-bold line-clamp-1 break-all'>{issue.reported_by}</p>
 								</div>
 							</CardContent>
 						</Card>
