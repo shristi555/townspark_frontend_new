@@ -67,7 +67,7 @@ function ImageGallery({ images }) {
 
 	return (
 		<div className='space-y-4'>
-			<motion.div 
+			<motion.div
 				layoutId="main-image"
 				className='relative w-full aspect-[16/10] sm:aspect-video rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-2xl'
 			>
@@ -171,6 +171,7 @@ export default function IssueDetails({
 	onToggleLike,
 	onDeleteIssue,
 	onArchiveIssue,
+	onUnarchiveIssue,
 	onIssueUpdated,
 }) {
 	const [comment, setComment] = useState("");
@@ -207,42 +208,66 @@ export default function IssueDetails({
 							<p className='text-[10px] text-zinc-500 font-bold'>#{issue.id} • {issue.category}</p>
 						</div>
 					</div>
-					
+
 					<div className='flex items-center gap-3'>
 						<StatusBadge isResolved={issue.is_resolved} className="h-8 rounded-xl px-4 text-[10px] font-black" />
 						{canModifyIssue && (
 							<div className='flex items-center gap-2'>
-								<EditIssueDialog 
-									issue={issue} 
+								<EditIssueDialog
+									issue={issue}
 									trigger={
 										<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800'>
 											<Pencil className='w-3 h-3 mr-2' /> Edit
-										</Button> 
+										</Button>
 									}
 									onUpdateSuccess={onIssueUpdated}
 								/>
-								
-								<AlertDialog>
-									<AlertDialogTrigger asChild>
-										<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 text-amber-600 hover:text-amber-700 hover:bg-amber-50'>
-											<Archive className='w-3 h-3 mr-2' /> Archive
-										</Button>
-									</AlertDialogTrigger>
-									<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
-										<AlertDialogHeader>
-											<AlertDialogTitle className="text-xl font-black">Archive this issue?</AlertDialogTitle>
-											<AlertDialogDescription className="text-zinc-500">
-												This will hide the issue from the public explore feed. You can still view it in "My Issues".
-											</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-											<AlertDialogAction onClick={onArchiveIssue} className="rounded-xl font-bold bg-amber-600 text-white hover:bg-amber-700 transition-all">
-												Confirm Archive
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
+
+								{issue.is_archived ? (
+									<AlertDialog>
+										<AlertDialogTrigger asChild>
+											<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 text-blue-600 hover:text-blue-700 hover:bg-blue-50'>
+												<Archive className='w-3 h-3 mr-2' /> Unarchive
+											</Button>
+										</AlertDialogTrigger>
+										<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
+											<AlertDialogHeader>
+												<AlertDialogTitle className="text-xl font-black">Unarchive this issue?</AlertDialogTitle>
+												<AlertDialogDescription className="text-zinc-500">
+													This will make the issue visible in the public explore feed again.
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+												<AlertDialogAction onClick={onUnarchiveIssue} className="rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all">
+													Confirm Unarchive
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
+								) : (
+									<AlertDialog>
+										<AlertDialogTrigger asChild>
+											<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 text-amber-600 hover:text-amber-700 hover:bg-amber-50'>
+												<Archive className='w-3 h-3 mr-2' /> Archive
+											</Button>
+										</AlertDialogTrigger>
+										<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
+											<AlertDialogHeader>
+												<AlertDialogTitle className="text-xl font-black">Archive this issue?</AlertDialogTitle>
+												<AlertDialogDescription className="text-zinc-500">
+													This will hide the issue from the public explore feed. You can still view it in your archived issues.
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+												<AlertDialogAction onClick={onArchiveIssue} className="rounded-xl font-bold bg-amber-600 text-white hover:bg-amber-700 transition-all">
+													Confirm Archive
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
+								)}
 
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
@@ -273,16 +298,21 @@ export default function IssueDetails({
 
 			<div className='container mx-auto px-4 py-8 max-w-7xl'>
 				<div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
-					
+
 					{/* Left Column - Main Content (8 cols) */}
 					<div className='lg:col-span-8 space-y-8'>
-						
+
 						{/* Featured Header Card */}
 						<div className='space-y-4'>
 							<div className='flex items-center gap-3'>
 								<Badge variant="outline" className="rounded-full border-primary/30 text-primary bg-primary/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest">
 									{issue.category}
 								</Badge>
+								{issue.is_archived && (
+									<Badge className="rounded-full bg-amber-500 text-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border-0">
+										Archived
+									</Badge>
+								)}
 								<div className='flex items-center gap-2 text-xs text-zinc-500 font-medium'>
 									<Calendar className='w-4 h-4' />
 									{new Date(issue.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
@@ -311,9 +341,9 @@ export default function IssueDetails({
 									<MapPin className='w-4 h-4' /> Precise Location
 								</h3>
 								<div className='rounded-3xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl'>
-									<MapView 
-										latitude={issue.latitude ? parseFloat(issue.latitude) : null} 
-										longitude={issue.longitude ? parseFloat(issue.longitude) : null} 
+									<MapView
+										latitude={issue.latitude ? parseFloat(issue.latitude) : null}
+										longitude={issue.longitude ? parseFloat(issue.longitude) : null}
 									/>
 									<div className='p-6 bg-card border-t border-border'>
 										<div className='flex items-start gap-4'>
@@ -337,7 +367,7 @@ export default function IssueDetails({
 									<MessageSquare className='w-4 h-4' /> Discussion ({issue.comments?.length || 0})
 								</h3>
 							</div>
-							
+
 							<div className='space-y-4'>
 								{issue.comments?.map((c) => (
 									<div key={c.id} className='flex gap-4 p-5 rounded-3xl bg-card border border-border hover:border-primary/20 transition-all'>
@@ -359,14 +389,14 @@ export default function IssueDetails({
 
 							{/* Add Comment */}
 							<div className='p-6 rounded-3xl bg-muted/30 border border-transparent focus-within:border-primary/30 transition-all'>
-								<Textarea 
+								<Textarea
 									placeholder='Share your thoughts or update on this issue...'
 									value={comment}
 									onChange={(e) => setComment(e.target.value)}
 									className='bg-transparent border-0 focus-visible:ring-0 resize-none min-h-[100px] text-base placeholder:font-bold'
 								/>
 								<div className='flex justify-end mt-4'>
-									<Button 
+									<Button
 										onClick={handleSubmitComment}
 										disabled={isSubmitting || !comment.trim()}
 										className='rounded-xl px-8 font-black shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95'
@@ -380,7 +410,7 @@ export default function IssueDetails({
 
 					{/* Right Column - Sidebar Stats & Timeline (4 cols) */}
 					<div className='lg:col-span-4 space-y-8'>
-						
+
 						{/* Quick Action Card - Improved to not invert logic but stay premium */}
 						<Card className='rounded-3xl border-0 bg-zinc-900 dark:bg-zinc-800 shadow-2xl shadow-primary/20 overflow-hidden'>
 							<CardContent className='p-8 space-y-6 text-white'>
@@ -393,8 +423,8 @@ export default function IssueDetails({
 										<ThumbsUp className='w-8 h-8' />
 									</div>
 								</div>
-								<Button 
-									variant='secondary' 
+								<Button
+									variant='secondary'
 									onClick={onToggleLike}
 									className='w-full h-14 rounded-2xl font-black text-lg bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl transition-all hover:-translate-y-1 active:translate-y-0'
 								>
@@ -434,10 +464,10 @@ export default function IssueDetails({
 							<div className='space-y-2'>
 								{hasProgressUpdates ? (
 									issue.progress_updates.map((update, index) => (
-										<ProgressTimelineItem 
-											key={update.id} 
-											update={update} 
-											isLast={index === issue.progress_updates.length - 1} 
+										<ProgressTimelineItem
+											key={update.id}
+											update={update}
+											isLast={index === issue.progress_updates.length - 1}
 										/>
 									))
 								) : (

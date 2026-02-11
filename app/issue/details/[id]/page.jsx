@@ -67,6 +67,10 @@ export default function IssueDetailsPage() {
 	};
 
 	const handleDeleteIssue = async () => {
+		if (!issue.is_archived) {
+			toast.error("You need to archive this issue first to delete the issue");
+			return;
+		}
 		try {
 			await IssueService.deleteIssue(params.id);
 			toast.success("Issue deleted successfully");
@@ -76,15 +80,26 @@ export default function IssueDetailsPage() {
 			toast.error("Failed to delete issue");
 		}
 	};
-	
+
 	const handleArchiveIssue = async () => {
 		try {
 			await IssueService.archiveIssue(params.id);
 			toast.success("Issue archived successfully");
-			router.push("/issue/mine"); // Or stay/refresh? Usually archive removes from list, so redirect or refresh knowing it might disappear from explore
+			fetchIssueDetails();
 		} catch (error) {
 			console.error("Error archiving issue:", error);
 			toast.error("Failed to archive issue");
+		}
+	};
+
+	const handleUnarchiveIssue = async () => {
+		try {
+			await IssueService.unarchiveIssue(params.id);
+			toast.success("Issue unarchived successfully");
+			fetchIssueDetails();
+		} catch (error) {
+			console.error("Error unarchiving issue:", error);
+			toast.error("Failed to unarchive issue");
 		}
 	};
 
@@ -104,6 +119,7 @@ export default function IssueDetailsPage() {
 			onToggleLike={handleToggleLike}
 			onDeleteIssue={handleDeleteIssue}
 			onArchiveIssue={handleArchiveIssue}
+			onUnarchiveIssue={handleUnarchiveIssue}
 			onIssueUpdated={fetchIssueDetails}
 		/>
 	);

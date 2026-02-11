@@ -37,14 +37,14 @@ const features = [
 		color: "text-purple-600 dark:text-purple-400",
 		bgColor: "bg-purple-500/10",
 	},
-	{
-		icon: Shield,
-		title: "Verify",
-		description:
-			"Get verified updates directly from your city officials and authorities.",
-		color: "text-orange-600 dark:text-orange-400",
-		bgColor: "bg-orange-500/10",
-	},
+	// {
+	// 	icon: Shield,
+	// 	title: "Verify",
+	// 	description:
+	// 		"Get verified updates directly from your city officials and authorities.",
+	// 	color: "text-orange-600 dark:text-orange-400",
+	// 	bgColor: "bg-orange-500/10",
+	// },
 	{
 		icon: Zap,
 		title: "Fast Response",
@@ -69,14 +69,14 @@ const features = [
 		color: "text-cyan-600 dark:text-cyan-400",
 		bgColor: "bg-cyan-500/10",
 	},
-	{
-		icon: BarChart3,
-		title: "Analytics",
-		description:
-			"View community statistics and trends to understand local improvement.",
-		color: "text-pink-600 dark:text-pink-400",
-		bgColor: "bg-pink-500/10",
-	},
+	// {
+	// 	icon: BarChart3,
+	// 	title: "Analytics",
+	// 	description:
+	// 		"View community statistics and trends to understand local improvement.",
+	// 	color: "text-pink-600 dark:text-pink-400",
+	// 	bgColor: "bg-pink-500/10",
+	// },
 ];
 
 function FeatureCard({ feature }) {

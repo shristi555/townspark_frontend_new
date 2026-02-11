@@ -6,25 +6,25 @@ import useAuthStore from "@/store/auth_store";
 import { useNeedAuth } from "@/hooks/auth-check";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { 
-	Card, 
-	CardContent, 
-	CardHeader, 
-	CardTitle, 
-	CardDescription 
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	CardDescription
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { 
-	LayoutDashboard, 
-	FileText, 
-	CheckCircle2, 
-	Clock, 
-	TrendingUp, 
-	Plus, 
-	MapPin, 
-	MessageSquare, 
+import {
+	LayoutDashboard,
+	FileText,
+	CheckCircle2,
+	Clock,
+	TrendingUp,
+	Plus,
+	MapPin,
+	MessageSquare,
 	ThumbsUp,
 	ArrowRight,
 	Activity
@@ -32,6 +32,17 @@ import {
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	ResponsiveContainer,
+	Cell
+} from "recharts";
+import api from "@/services/api";
 
 export default function DashboardPage() {
 	const { loading: authLoading } = useNeedAuth();
@@ -39,12 +50,24 @@ export default function DashboardPage() {
 	const profileData = useAuthStore((state) => state.profileData);
 	const user = useAuthStore((state) => state.user);
 	const [isLoading, setIsLoading] = useState(true);
+	const [communityStats, setCommunityStats] = useState(null);
 
 	useEffect(() => {
 		const loadData = async () => {
 			if (!profileData) {
 				await fetchProfile();
 			}
+
+			// Fetch some global stats for "Community Pulse"
+			try {
+				const res = await api.get('profile/analytics/');
+				if (res.success) {
+					setCommunityStats(res.response);
+				}
+			} catch (err) {
+				console.error("Failed to fetch community stats", err);
+			}
+
 			setIsLoading(false);
 		};
 		loadData();
@@ -57,7 +80,10 @@ export default function DashboardPage() {
 		total_issues_reported: 0,
 		total_resolved: 0,
 		total_issues_liked: 0,
-		total_comments_made: 0
+		total_comments_made: 0,
+		impact_rank: "N/A",
+		resolution_overview: [],
+		category_breakdown: []
 	};
 
 	const recentIssues = profileData?.reported_issues?.issues?.slice(0, 3) || [];
@@ -66,11 +92,11 @@ export default function DashboardPage() {
 	return (
 		<div className='min-h-screen bg-background text-foreground transition-colors duration-500'>
 			<div className='container mx-auto px-4 py-8 max-w-7xl space-y-8'>
-				
+
 				{/* Welcome Header */}
 				<header className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
 					<div className='space-y-1'>
-						<motion.h1 
+						<motion.h1
 							initial={{ opacity: 0, x: -20 }}
 							animate={{ opacity: 1, x: 0 }}
 							className='text-3xl md:text-5xl font-black tracking-tight'
@@ -92,42 +118,42 @@ export default function DashboardPage() {
 
 				{/* Quick Stats Grid */}
 				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-					<StatCard 
-						title="Total Reports" 
-						value={stats.total_issues_reported || 0} 
-						icon={FileText} 
+					<StatCard
+						title="Total Reports"
+						value={stats.total_issues_reported || 0}
+						icon={FileText}
 						color="text-primary"
 						description="Issues you've contributed"
 						delay={0.1}
 					/>
-					<StatCard 
-						title="Resolved" 
-						value={stats.total_resolved || 0} 
-						icon={CheckCircle2} 
+					<StatCard
+						title="Resolved"
+						value={stats.total_resolved || 0}
+						icon={CheckCircle2}
 						color="text-emerald-500"
 						description="Community fixes realized"
 						delay={0.2}
 					/>
-					<StatCard 
-						title="Engagement" 
-						value={(stats.total_issues_liked || 0) + (stats.total_comments_made || 0)} 
-						icon={Activity} 
+					<StatCard
+						title="Engagement"
+						value={(stats.total_issues_liked || 0) + (stats.total_comments_made || 0)}
+						icon={Activity}
 						color="text-blue-500"
 						description="Total likes and comments"
 						delay={0.3}
 					/>
-					<StatCard 
-						title="Impact Rank" 
-						value="#12" 
-						icon={TrendingUp} 
+					<StatCard
+						title="Impact Rank"
+						value={stats.impact_rank || "#--"}
+						icon={TrendingUp}
 						color="text-amber-500"
-						description="Top contributor status"
+						description="Your standing in community"
 						delay={0.4}
 					/>
 				</div>
 
 				<div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
-					
+
 					{/* Activity Feed (Left) */}
 					<div className='lg:col-span-8 space-y-6'>
 						<div className='flex items-center justify-between'>
@@ -164,14 +190,39 @@ export default function DashboardPage() {
 								<CardTitle className='text-lg font-black'>Resolution Overview</CardTitle>
 								<CardDescription>How quickly your reported issues are handled.</CardDescription>
 							</CardHeader>
-							<CardContent className='h-48 flex items-end gap-3 px-8 pb-8'>
-								<div className='flex-1 bg-primary/20 rounded-t-xl h-[40%] transition-all hover:bg-primary/40' />
-								<div className='flex-1 bg-primary/20 rounded-t-xl h-[60%] transition-all hover:bg-primary/40' />
-								<div className='flex-1 bg-primary rounded-t-xl h-[85%] transition-all hover:scale-105 shadow-xl shadow-primary/20' />
-								<div className='flex-1 bg-primary/20 rounded-t-xl h-[30%] transition-all hover:bg-primary/40' />
-								<div className='flex-1 bg-primary/20 rounded-t-xl h-[55%] transition-all hover:bg-primary/40' />
-								<div className='flex-1 bg-primary/20 rounded-t-xl h-[45%] transition-all hover:bg-primary/40' />
-								<div className='flex-1 bg-primary/20 rounded-t-xl h-[70%] transition-all hover:bg-primary/40' />
+							<CardContent className='h-[250px] w-full pt-4'>
+								<ResponsiveContainer width="100%" height="100%">
+									<BarChart data={stats.resolution_overview}>
+										<CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+										<XAxis
+											dataKey="day"
+											axisLine={false}
+											tickLine={false}
+											tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12, fontWeight: 600 }}
+										/>
+										<Tooltip
+											cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
+											contentStyle={{
+												backgroundColor: 'hsl(var(--card))',
+												borderColor: 'hsl(var(--border))',
+												borderRadius: '12px',
+												fontWeight: 'bold'
+											}}
+										/>
+										<Bar
+											dataKey="reported"
+											fill="hsl(var(--primary) / 0.3)"
+											radius={[4, 4, 0, 0]}
+											name="Issues Reported"
+										/>
+										<Bar
+											dataKey="resolved"
+											fill="hsl(var(--primary))"
+											radius={[4, 4, 0, 0]}
+											name="Issues Resolved"
+										/>
+									</BarChart>
+								</ResponsiveContainer>
 							</CardContent>
 						</Card>
 					</div>
@@ -179,16 +230,24 @@ export default function DashboardPage() {
 					{/* Neighborhood Pulse (Right) */}
 					<div className='lg:col-span-4 space-y-6'>
 						<h3 className='text-xs font-black uppercase tracking-[0.2em] text-muted-foreground'>Community Activity</h3>
-						
+
 						<Card className='rounded-3xl border-border bg-card shadow-xl shadow-primary/5'>
 							<CardHeader>
 								<CardTitle className='text-lg font-black'>Top Categories</CardTitle>
 							</CardHeader>
 							<CardContent className='space-y-4'>
-								<CategoryProgress label="Road Infrastructure" progress={75} count={stats.road_count || 12} />
-								<CategoryProgress label="Waste Management" progress={45} count={stats.garbage_count || 8} />
-								<CategoryProgress label="Utility Issues" progress={30} count={stats.water_count || 5} />
-								<CategoryProgress label="Others" progress={15} count={stats.other_count || 2} />
+								{stats.category_breakdown?.length > 0 ? (
+									stats.category_breakdown.slice(0, 4).map((cat, idx) => (
+										<CategoryProgress
+											key={cat.category}
+											label={cat.category.charAt(0).toUpperCase() + cat.category.slice(1)}
+											progress={Math.min(100, (cat.count / (stats.total_issues_reported || 1)) * 100)}
+											count={cat.count}
+										/>
+									))
+								) : (
+									<p className='text-xs text-muted-foreground text-center py-4'>No category data yet</p>
+								)}
 							</CardContent>
 						</Card>
 
@@ -206,6 +265,35 @@ export default function DashboardPage() {
 								</Button>
 							</CardContent>
 						</Card>
+
+						{/* Community Pulse Section */}
+						{communityStats && (
+							<Card className='rounded-3xl border-border bg-card shadow-xl shadow-primary/5 overflow-hidden'>
+								<CardHeader className='pb-2'>
+									<CardTitle className='text-lg font-black'>Community Pulse</CardTitle>
+									<CardDescription>Global Townspark Activity</CardDescription>
+								</CardHeader>
+								<CardContent className='space-y-4 pb-6'>
+									<div className='grid grid-cols-2 gap-3'>
+										<div className='p-4 rounded-2xl bg-muted/50'>
+											<p className='text-[10px] font-black uppercase text-muted-foreground'>Global Issues</p>
+											<p className='text-xl font-black'>{communityStats.total_issues_reported}</p>
+										</div>
+										<div className='p-4 rounded-2xl bg-emerald-500/10'>
+											<p className='text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400'>Resolved</p>
+											<p className='text-xl font-black text-emerald-600 dark:text-emerald-400'>{communityStats.total_issues_resolved}</p>
+										</div>
+									</div>
+									<div className='p-4 rounded-2xl bg-blue-500/10 flex items-center justify-between'>
+										<div>
+											<p className='text-[10px] font-black uppercase text-blue-600 dark:text-blue-400'>Resolution Rate</p>
+											<p className='text-xl font-black text-blue-600 dark:text-blue-400'>{communityStats.resolution_stats?.resolution_rate_percentage}%</p>
+										</div>
+										<Activity className='w-8 h-8 text-blue-500/30' />
+									</div>
+								</CardContent>
+							</Card>
+						)}
 					</div>
 
 				</div>
@@ -310,11 +398,11 @@ function CategoryProgress({ label, progress, count }) {
 				<span className='text-primary'>{count} reports</span>
 			</div>
 			<div className='h-2 bg-muted rounded-full overflow-hidden'>
-				<motion.div 
+				<motion.div
 					initial={{ width: 0 }}
 					animate={{ width: `${progress}%` }}
 					transition={{ duration: 1, ease: "easeOut" }}
-					className='h-full bg-primary rounded-full' 
+					className='h-full bg-primary rounded-full'
 				/>
 			</div>
 		</div>

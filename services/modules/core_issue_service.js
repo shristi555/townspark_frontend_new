@@ -33,74 +33,74 @@ const CoreIssueService = {
 	 * @example
 	 * // Success response example
 	 * {
-    "success": true,
-    "response": [
-        {
-            "id": 4,
-            "title": "Plothole issue",
-            "description": "Serious issue of plothole in our area",
-            "category": "road",
-            "address": "belbari",
-            "is_resolved": false,
-            "reported_by": "strela500@gmail.com",
-            "images": [
-                {
-                    "id": 5,
-                    "image": "/media/issue_images/4/d93db9bf0a244c07a2ad03aa0704b7bf.jpg"
-                },
-                {
-                    "id": 6,
-                    "image": "/media/issue_images/4/8534c4577fdc46e98d9ddf99bcf3d200.jpg"
-                },
-                {
-                    "id": 7,
-                    "image": "/media/issue_images/4/7d853d1a72f04022b9718273241349af.jpg"
-                }
-            ],
-            "comments_count": 1,
-            "likes_count": 0,
-            "progress_updates": [
-                {
-                    "id": 3,
-                    "title": "Inspection done",
-                    "description": "Some municipal officer have came and done inspections",
-                    "updated_by": {
-                        "id": 8,
-                        "email": "strela500@gmail.com",
-                        "first_name": "Shristi",
-                        "last_name": "Poudel"
-                    },
-                    "created_at": "2025-12-29T16:15:45.329087Z"
-                },
-                {
-                    "id": 2,
-                    "title": "Inspection done",
-                    "description": "Some municipal officer have came and done inspections",
-                    "updated_by": {
-                        "id": 8,
-                        "email": "strela500@gmail.com",
-                        "first_name": "Shristi",
-                        "last_name": "Poudel"
-                    },
-                    "created_at": "2025-12-29T16:11:19.659268Z"
-                },
-                {
-                    "id": 1,
-                    "title": "Inspection done",
-                    "description": "Some municipal officer have came and done inspections",
-                    "updated_by": {
-                        "id": 8,
-                        "email": "strela500@gmail.com",
-                        "first_name": "Shristi",
-                        "last_name": "Poudel"
-                    },
-                    "created_at": "2025-12-29T16:07:46.616489Z"
-                }
-            ],
-            "created_at": "2025-12-29T15:54:24.485317Z"
-        }
-    ],
-    "error": null
+	"success": true,
+	"response": [
+		{
+			"id": 4,
+			"title": "Plothole issue",
+			"description": "Serious issue of plothole in our area",
+			"category": "road",
+			"address": "belbari",
+			"is_resolved": false,
+			"reported_by": "strela500@gmail.com",
+			"images": [
+				{
+					"id": 5,
+					"image": "/media/issue_images/4/d93db9bf0a244c07a2ad03aa0704b7bf.jpg"
+				},
+				{
+					"id": 6,
+					"image": "/media/issue_images/4/8534c4577fdc46e98d9ddf99bcf3d200.jpg"
+				},
+				{
+					"id": 7,
+					"image": "/media/issue_images/4/7d853d1a72f04022b9718273241349af.jpg"
+				}
+			],
+			"comments_count": 1,
+			"likes_count": 0,
+			"progress_updates": [
+				{
+					"id": 3,
+					"title": "Inspection done",
+					"description": "Some municipal officer have came and done inspections",
+					"updated_by": {
+						"id": 8,
+						"email": "strela500@gmail.com",
+						"first_name": "Shristi",
+						"last_name": "Poudel"
+					},
+					"created_at": "2025-12-29T16:15:45.329087Z"
+				},
+				{
+					"id": 2,
+					"title": "Inspection done",
+					"description": "Some municipal officer have came and done inspections",
+					"updated_by": {
+						"id": 8,
+						"email": "strela500@gmail.com",
+						"first_name": "Shristi",
+						"last_name": "Poudel"
+					},
+					"created_at": "2025-12-29T16:11:19.659268Z"
+				},
+				{
+					"id": 1,
+					"title": "Inspection done",
+					"description": "Some municipal officer have came and done inspections",
+					"updated_by": {
+						"id": 8,
+						"email": "strela500@gmail.com",
+						"first_name": "Shristi",
+						"last_name": "Poudel"
+					},
+					"created_at": "2025-12-29T16:07:46.616489Z"
+				}
+			],
+			"created_at": "2025-12-29T15:54:24.485317Z"
+		}
+	],
+	"error": null
 }
 	 * 
 	 * @response_description

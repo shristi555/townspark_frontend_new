@@ -13,10 +13,10 @@ const LandingService = {
             // Return fallback dummy data in case of error
             return {
                 stats: {
-                    total_users: 100,
-                    issues_resolved: 150,
-                    cities_connected: 10,
-                    avg_response_time_hrs: 48.0
+                    total_users: 0,
+                    issues_resolved: 0,
+                    cities_connected: 0,
+                    avg_response_time_hrs: 0
                 },
                 testimonials: []
             };

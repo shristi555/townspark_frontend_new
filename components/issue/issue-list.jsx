@@ -141,15 +141,14 @@ function StatCard({ label, value, icon: Icon, colorClass }) {
 						</h3>
 					</div>
 					<div
-						className={`w-12 h-12 rounded-full flex items-center justify-center ${
-							colorClass?.includes("yellow")
-								? "bg-yellow-500/10"
-								: colorClass?.includes("green")
-									? "bg-green-500/10"
-									: colorClass?.includes("zinc") 
-										? "bg-zinc-500/10" 
-										: "bg-primary/10"
-						}`}
+						className={`w-12 h-12 rounded-full flex items-center justify-center ${colorClass?.includes("yellow")
+							? "bg-yellow-500/10"
+							: colorClass?.includes("green")
+								? "bg-green-500/10"
+								: colorClass?.includes("zinc")
+									? "bg-zinc-500/10"
+									: "bg-primary/10"
+							}`}
 					>
 						<Icon
 							className={`w-6 h-6 ${colorClass || "text-primary"}`}
@@ -349,7 +348,7 @@ export default function IssueList({ issues, onIssueClick, onCreateNew }) {
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [categoryFilter, setCategoryFilter] = useState("all");
 	// ... rest of component
-	
+
 	const filteredIssues = useMemo(
 		() => filterIssues(issues, searchQuery, statusFilter, categoryFilter),
 		[issues, searchQuery, statusFilter, categoryFilter]
