@@ -25,6 +25,8 @@ import useAuthStore from "@/store/auth_store";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { DeleteAccountDialog } from "@/components/profile/delete-account-dialog";
 import { NotificationList } from "@/components/profile/notification-list";
+import { CATEGORY_COLORS } from "@/components/issue/constants";
+import { cn } from "@/lib/utils";
 
 const ProfilePage = () => {
 	const { loading: authLoading } = useNeedAuth();
@@ -36,14 +38,7 @@ const ProfilePage = () => {
 	}, [fetchProfile]);
 
 	const getCategoryColor = (category) => {
-		const colors = {
-			garbage: "bg-orange-500",
-			drainage: "bg-blue-500",
-			streetlight: "bg-yellow-500",
-			water: "bg-cyan-500",
-			road: "bg-gray-500",
-		};
-		return colors[category] || "bg-gray-500";
+		return CATEGORY_COLORS[category.toLowerCase()] || "bg-gray-500/10 text-gray-700";
 	};
 
 	const formatDate = (dateString) => {
@@ -95,9 +90,9 @@ const ProfilePage = () => {
 								</h3>
 								<div className='flex flex-wrap gap-2 mb-2'>
 									<Badge
-										className={getCategoryColor(
+										className={cn(getCategoryColor(
 											issue.category
-										)}
+										), "border-0")}
 									>
 										{issue.category}
 									</Badge>
@@ -227,7 +222,7 @@ const ProfilePage = () => {
 							</p>
 
 							<div className='flex flex-wrap gap-2 justify-center md:justify-start'>
-								<EditProfileDialog 
+								<EditProfileDialog
 									user={user}
 									trigger={
 										<Button size='sm'>
@@ -236,7 +231,7 @@ const ProfilePage = () => {
 										</Button>
 									}
 								/>
-								<DeleteAccountDialog 
+								<DeleteAccountDialog
 									trigger={
 										<Button size='sm' variant='destructive' className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200">
 											<Settings className='w-4 h-4 mr-2' />

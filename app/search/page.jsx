@@ -41,7 +41,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DiscoveryService from "@/services/discovery_service";
 import { useDebounce } from "@/hooks/use-debounce";
 import Link from "next/link";
-import { ISSUE_CATEGORIES } from "@/components/issue/constants";
+import { ISSUE_CATEGORIES, CATEGORY_COLORS } from "@/components/issue/constants";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
@@ -475,7 +475,9 @@ export default function SearchPage() {
                                                         <div className="flex-1 space-y-2">
                                                             <div className="flex items-start justify-between">
                                                                 <div>
-                                                                    <Badge className="mb-2 bg-primary/10 text-primary border-0 rounded-full text-[10px] font-black uppercase">{issue.category}</Badge>
+                                                                    <Badge className={cn("mb-2 border-0 rounded-full text-[10px] font-black uppercase", CATEGORY_COLORS[issue.category.toLowerCase()] || "bg-primary/10 text-primary")}>
+                                                                        {issue.category}
+                                                                    </Badge>
                                                                     <h3 className="font-black text-lg leading-tight line-clamp-1 group-hover:text-primary transition-colors">{issue.title}</h3>
                                                                 </div>
                                                                 <Badge variant={issue.is_resolved ? "success" : "outline"} className="rounded-full">

@@ -39,8 +39,9 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { CATEGORY_HEX } from "@/components/issue/constants";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 function AnalyticsPage() {
 	const [data, setData] = useState(null);
@@ -234,8 +235,11 @@ function AnalyticsPage() {
 											nameKey='category'
 											cx='50%' cy='50%' outerRadius={80}
 										>
-											{(data?.category_distribution ?? []).map((_, index) => (
-												<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+											{(data?.category_distribution ?? []).map((entry, index) => (
+												<Cell
+													key={`cell-${index}`}
+													fill={CATEGORY_HEX[entry.category.toLowerCase()] || DEFAULT_COLORS[index % DEFAULT_COLORS.length]}
+												/>
 											))}
 										</Pie>
 										<Tooltip />

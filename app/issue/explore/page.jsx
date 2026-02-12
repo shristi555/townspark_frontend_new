@@ -35,6 +35,7 @@ import api from "@/services/api";
 import { useNeedAuth } from "@/hooks/auth-check";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { ISSUE_CATEGORIES, CATEGORY_COLORS } from "@/components/issue/constants";
 
 import {
 	Popover,
@@ -107,7 +108,7 @@ function IssueCard({ issue }) {
 								)}
 								{issue.is_resolved ? "Resolved" : "Open"}
 							</Badge>
-							<Badge variant="secondary" className="backdrop-blur-md bg-white/20 dark:bg-black/20 text-white border-0 shadow-lg px-2 py-1">
+							<Badge variant="secondary" className={cn("backdrop-blur-md border-0 shadow-lg px-2 py-1", CATEGORY_COLORS[issue.category.toLowerCase()] || "bg-white/20 dark:bg-black/20 text-white")}>
 								{issue.category}
 							</Badge>
 						</div>
@@ -400,11 +401,11 @@ export default function ExplorePage() {
 										className='h-14 px-4 bg-muted/50 border-0 rounded-2xl text-sm font-black focus:ring-1 ring-primary transition-all outline-none min-w-[140px]'
 									>
 										<option value='' className="bg-card">All Categories</option>
-										<option value='water' className="bg-card">Water</option>
-										<option value='road' className="bg-card">Roads</option>
-										<option value='drainage' className="bg-card">Drainage</option>
-										<option value='streetlight' className="bg-card">Street Lights</option>
-										<option value='garbage' className="bg-card">Garbage</option>
+										{ISSUE_CATEGORIES.map((cat) => (
+											<option key={cat.value} value={cat.value} className="bg-card">
+												{cat.label}
+											</option>
+										))}
 									</select>
 									<select
 										aria-label='Sort'
