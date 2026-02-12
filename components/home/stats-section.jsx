@@ -8,8 +8,8 @@ export default function StatsSection({ stats, isLoading }) {
         return (
             <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary/5">
                 <div className="container mx-auto">
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {[...Array(4)].map((_, i) => (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[...Array(3)].map((_, i) => (
                             <div key={i} className="flex flex-col items-center space-y-4">
                                 <Skeleton className="w-16 h-16 rounded-full" />
                                 <Skeleton className="h-8 w-24" />
@@ -22,35 +22,28 @@ export default function StatsSection({ stats, isLoading }) {
         );
     }
 
-    // Use actual stats if > 0, otherwise use requested fallback values
+    // Use actual stats if above community milestones
     const displayStats = [
         {
-            shouldShow: stats?.issues_resolved > 0,
+            shouldShow: stats?.total_issues_reported >= 10,
             icon: TrendingUp,
-            value: stats?.issues_resolved > 0 ? `${stats.issues_resolved.toLocaleString()}+` : "150+",
-            label: "Issues Resolved",
-            color: "text-green-600 dark:text-green-400",
+            value: `${stats?.total_issues_reported?.toLocaleString()}+`,
+            label: "Reported Issues",
+            color: "text-emerald-600 dark:text-emerald-400",
         },
         {
-            shouldShow: stats?.total_users > 0,
+            shouldShow: stats?.total_users >= 50,
             icon: Users,
-            value: stats?.total_users > 0 ? `${stats.total_users.toLocaleString()}+` : "100+",
-            label: "Active Users",
+            value: `${stats?.total_users?.toLocaleString()}+`,
+            label: "People Engaged",
             color: "text-blue-600 dark:text-blue-400",
         },
         {
-            shouldShow: stats?.cities_connected > 0,
+            shouldShow: stats?.cities_connected >= 5,
             icon: MapPin,
-            value: stats?.cities_connected > 0 ? `${stats.cities_connected}+` : "10+",
+            value: `${stats?.cities_connected}+`,
             label: "Cities Connected",
             color: "text-purple-600 dark:text-purple-400",
-        },
-        {
-            shouldShow: stats?.avg_response_time_hrs > 0,
-            icon: Clock,
-            value: stats?.avg_response_time_hrs > 0 ? `${Math.round(stats.avg_response_time_hrs)}hrs` : "48hrs",
-            label: "Avg Response Time",
-            color: "text-orange-600 dark:text-orange-400",
         },
     ];
 
@@ -63,7 +56,7 @@ export default function StatsSection({ stats, isLoading }) {
     return (
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary/5">
             <div className="container mx-auto">
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {displayStats.map((stat, index) => {
                         const Icon = stat.icon;
                         return (

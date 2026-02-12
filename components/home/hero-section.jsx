@@ -9,16 +9,16 @@ export default function HeroSection({ stats, isLoading }) {
     const router = useRouter();
 
     const displayStats = {
-        issues: stats?.issues_resolved > 0 ? `${stats.issues_resolved.toLocaleString()}+` : "0+",
-        cities: stats?.cities_connected > 0 ? `${stats.cities_connected}+` : "0+",
-        users: stats?.total_users > 0 ? `${stats.total_users.toLocaleString()}+` : "0+",
+        issues: stats?.total_issues_reported >= 10 ? `${stats.total_issues_reported.toLocaleString()}+` : null,
+        cities: stats?.cities_connected >= 5 ? `${stats.cities_connected}+` : null,
+        users: stats?.total_users >= 50 ? `${stats.total_users.toLocaleString()}+` : null,
     };
 
     const shouldShow = {
-        hideAll: isLoading || (stats?.issues_resolved === 0 && stats?.cities_connected === 0 && stats?.total_users === 0),
-        issues: isLoading || stats?.issues_resolved > 0,
-        cities: isLoading || stats?.cities_connected > 0,
-        users: isLoading || stats?.total_users > 0,
+        hideAll: isLoading || (!displayStats.issues && !displayStats.cities && !displayStats.users),
+        issues: isLoading || displayStats.issues,
+        cities: isLoading || displayStats.cities,
+        users: isLoading || displayStats.users,
     };
 
     return (
@@ -83,7 +83,7 @@ export default function HeroSection({ stats, isLoading }) {
                                     {shouldShow.issues && (
                                         <div>
                                             {isLoading ? <Skeleton className="h-9 w-20 mb-1" /> : <p className="text-3xl font-bold">{displayStats.issues}</p>}
-                                            <p className="text-sm text-muted-foreground">Issues Resolved</p>
+                                            <p className="text-sm text-muted-foreground">Reported Issues</p>
                                         </div>
                                     )}
 
@@ -102,7 +102,7 @@ export default function HeroSection({ stats, isLoading }) {
                                             <div className="hidden sm:block w-px h-12 bg-border" />
                                             <div>
                                                 {isLoading ? <Skeleton className="h-9 w-20 mb-1" /> : <p className="text-3xl font-bold">{displayStats.users}</p>}
-                                                <p className="text-sm text-muted-foreground">Active Users</p>
+                                                <p className="text-sm text-muted-foreground">People Engaged</p>
                                             </div>
                                         </>
                                     )}

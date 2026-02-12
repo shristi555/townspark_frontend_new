@@ -14,9 +14,8 @@ const LandingService = {
             return {
                 stats: {
                     total_users: 0,
-                    issues_resolved: 0,
+                    total_issues_reported: 0,
                     cities_connected: 0,
-                    avg_response_time_hrs: 0
                 },
                 testimonials: []
             };

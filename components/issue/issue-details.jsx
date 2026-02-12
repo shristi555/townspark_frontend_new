@@ -24,8 +24,20 @@ import {
 	ChevronRight,
 	Badge,
 	Archive,
+	MoreVertical,
+	History,
+	AlertTriangle,
 } from "lucide-react";
 import { EditIssueDialog } from "./edit-issue-dialog";
+import { ProgressUpdateDialog } from "./progress-update-dialog";
+import { ArchiveIssueDialog } from "./archive-issue-dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+	DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -190,7 +202,7 @@ export default function IssueDetails({
 		}
 	};
 
-	const canModifyIssue = userId === issue.requesting_user_id || userId === issue.user?.id;
+	const canModifyIssue = userId === issue.reported_by_id;
 	const hasProgressUpdates = issue.progress_updates && issue.progress_updates.length > 0;
 	const hasLocation = issue.latitude && issue.longitude;
 
@@ -209,87 +221,102 @@ export default function IssueDetails({
 						</div>
 					</div>
 
+
 					<div className='flex items-center gap-3'>
 						<StatusBadge isResolved={issue.is_resolved} className="h-8 rounded-xl px-4 text-[10px] font-black" />
+
 						{canModifyIssue && (
 							<div className='flex items-center gap-2'>
+								{/* Primary Management Actions */}
+								<ProgressUpdateDialog
+									issue={issue}
+									onSuccess={onIssueUpdated}
+									trigger={
+										<Button size='sm' className='h-8 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20'>
+											<History className='w-3 h-3 mr-2' /> Track Progress
+										</Button>
+									}
+								/>
+
 								<EditIssueDialog
 									issue={issue}
 									trigger={
-										<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800'>
+										<Button size='sm' variant='outline' className='h-8 rounded-xl text-[10px] font-black uppercase tracking-wider border-zinc-200 dark:border-zinc-800'>
 											<Pencil className='w-3 h-3 mr-2' /> Edit
 										</Button>
 									}
 									onUpdateSuccess={onIssueUpdated}
 								/>
 
-								{issue.is_archived ? (
-									<AlertDialog>
-										<AlertDialogTrigger asChild>
-											<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 text-blue-600 hover:text-blue-700 hover:bg-blue-50'>
-												<Archive className='w-3 h-3 mr-2' /> Unarchive
-											</Button>
-										</AlertDialogTrigger>
-										<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
-											<AlertDialogHeader>
-												<AlertDialogTitle className="text-xl font-black">Unarchive this issue?</AlertDialogTitle>
-												<AlertDialogDescription className="text-zinc-500">
-													This will make the issue visible in the public explore feed again.
-												</AlertDialogDescription>
-											</AlertDialogHeader>
-											<AlertDialogFooter>
-												<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-												<AlertDialogAction onClick={onUnarchiveIssue} className="rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all">
-													Confirm Unarchive
-												</AlertDialogAction>
-											</AlertDialogFooter>
-										</AlertDialogContent>
-									</AlertDialog>
-								) : (
-									<AlertDialog>
-										<AlertDialogTrigger asChild>
-											<Button size='sm' variant='outline' className='h-8 rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 text-amber-600 hover:text-amber-700 hover:bg-amber-50'>
-												<Archive className='w-3 h-3 mr-2' /> Archive
-											</Button>
-										</AlertDialogTrigger>
-										<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
-											<AlertDialogHeader>
-												<AlertDialogTitle className="text-xl font-black">Archive this issue?</AlertDialogTitle>
-												<AlertDialogDescription className="text-zinc-500">
-													This will hide the issue from the public explore feed. You can still view it in your archived issues.
-												</AlertDialogDescription>
-											</AlertDialogHeader>
-											<AlertDialogFooter>
-												<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-												<AlertDialogAction onClick={onArchiveIssue} className="rounded-xl font-bold bg-amber-600 text-white hover:bg-amber-700 transition-all">
-													Confirm Archive
-												</AlertDialogAction>
-											</AlertDialogFooter>
-										</AlertDialogContent>
-									</AlertDialog>
-								)}
-
-								<AlertDialog>
-									<AlertDialogTrigger asChild>
-										<Button size='sm' variant='destructive' className='h-8 rounded-xl text-xs font-bold shadow-lg shadow-red-500/20'>
-											<Trash2 className='w-3 h-3 mr-2' /> Delete
+								{/* Dangerous/Secondary Actions via Dropdown */}
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button size='sm' variant='ghost' className='h-8 w-8 rounded-xl p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800'>
+											<MoreVertical className='w-4 h-4 text-muted-foreground' />
 										</Button>
-									</AlertDialogTrigger>
-									<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
-										<AlertDialogHeader>
-											<AlertDialogTitle className="text-xl font-black">Hold on! Are you sure?</AlertDialogTitle>
-											<AlertDialogDescription className="text-zinc-500">
-												This will permanently delete this report. All images, comments, and progress updates will be lost forever.
-											</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-											<AlertDialogAction onClick={onDeleteIssue} className="rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90 transition-all">
-												Delete Forever
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end" className="rounded-2xl border-0 shadow-2xl bg-background/95 backdrop-blur-xl p-2 min-w-[180px]">
+										{issue.is_archived ? (
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="rounded-xl font-bold py-3 text-blue-600 focus:text-blue-600 focus:bg-blue-50 cursor-pointer">
+														<Archive className='w-4 h-4 mr-3' /> Unarchive Report
+													</DropdownMenuItem>
+												</AlertDialogTrigger>
+												<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
+													<AlertDialogHeader>
+														<AlertDialogTitle className="text-xl font-black">Unarchive this issue?</AlertDialogTitle>
+														<AlertDialogDescription className="text-zinc-500 font-medium">
+															This will make the report visible in the community feed again.
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+														<AlertDialogAction onClick={onUnarchiveIssue} className="rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all">
+															Restore Visibility
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+										) : (
+											<ArchiveIssueDialog
+												issue={issue}
+												onArchiveSuccess={onIssueUpdated}
+												trigger={
+													<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="rounded-xl font-bold py-3 text-amber-600 focus:text-amber-600 focus:bg-amber-50 cursor-pointer">
+														<Archive className='w-4 h-4 mr-3' /> Archive Report
+													</DropdownMenuItem>
+												}
+											/>
+										)}
+
+										<DropdownMenuSeparator className="bg-border/50 my-1" />
+
+										<AlertDialog>
+											<AlertDialogTrigger asChild>
+												<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="rounded-xl font-bold py-3 text-destructive focus:text-destructive focus:bg-destructive/5 cursor-pointer">
+													<Trash2 className='w-4 h-4 mr-3' /> Delete Permanently
+												</DropdownMenuItem>
+											</AlertDialogTrigger>
+											<AlertDialogContent className="rounded-3xl border-zinc-200 dark:border-zinc-800">
+												<AlertDialogHeader>
+													<AlertDialogTitle className="text-xl font-black flex items-center gap-3">
+														<AlertTriangle className="text-destructive w-6 h-6" /> Destructive Action
+													</AlertDialogTitle>
+													<AlertDialogDescription className="text-zinc-500 font-medium pt-2">
+														This will permanently delete this report. All images, comments, and progress updates will be lost forever. This cannot be undone.
+													</AlertDialogDescription>
+												</AlertDialogHeader>
+												<AlertDialogFooter>
+													<AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+													<AlertDialogAction onClick={onDeleteIssue} className="rounded-xl font-bold bg-destructive text-white hover:bg-destructive/90 transition-all">
+														Confirm Deletion
+													</AlertDialogAction>
+												</AlertDialogFooter>
+											</AlertDialogContent>
+										</AlertDialog>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</div>
 						)}
 					</div>

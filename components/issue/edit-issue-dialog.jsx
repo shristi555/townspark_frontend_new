@@ -19,8 +19,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 import IssueService from "@/services/issue_service"
+import { ISSUE_CATEGORIES } from "./constants"
+import { cn } from "@/lib/utils"
 
 export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
   const [open, setOpen] = useState(false)
@@ -31,7 +40,7 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
       title: issue.title ?? "",
       description: issue.description ?? "",
       address: issue.address ?? "",
-      category_name: issue.category ?? "",
+      category_name: issue.category?.toLowerCase() ?? "",
       is_resolved: issue.is_resolved ?? false
     }
   })
@@ -41,7 +50,6 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
     try {
       const response = await IssueService.updateIssue(issue.id, data)
 
-      // Check success based on SRE wrapper or direct response
       if (response.success || response.id) {
         toast.success("Identity updated successfully")
         setOpen(false)
@@ -62,7 +70,7 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-0 bg-background/60 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl">
+      <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-0 bg-background/60 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl">
         <div className="bg-gradient-to-br from-primary/10 via-background to-transparent p-8">
           <DialogHeader className="mb-8">
             <div className="flex items-center gap-3 mb-2">
@@ -83,7 +91,7 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
                 <Input
                   id="title"
                   {...register("title", { required: "Headline is required" })}
-                  className="h-12 rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-bold text-lg"
+                  className="h-12 rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-bold text-lg px-4"
                   placeholder="Summarize the core problem..."
                 />
                 {errors.title && <p className="text-[10px] font-black text-destructive uppercase tracking-wider ml-2">{errors.title.message}</p>}
@@ -95,7 +103,7 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
                   id="description"
                   rows={4}
                   {...register("description", { required: "Description is required" })}
-                  className="rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-medium text-base resize-none"
+                  className="rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-medium text-base resize-none px-4 py-3"
                   placeholder="Describe the situation in detail..."
                 />
                 {errors.description && <p className="text-[10px] font-black text-destructive uppercase tracking-wider ml-2">{errors.description.message}</p>}
@@ -104,11 +112,23 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-xs font-black uppercase tracking-widest ml-1 opacity-50">Category</Label>
-                  <Input
-                    id="category"
-                    {...register("category_name")}
-                    placeholder="e.g. Infrastructure"
-                    className="h-12 rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-bold"
+                  <Controller
+                    name="category_name"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="h-12 rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-bold">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-0 shadow-2xl bg-background/95 backdrop-blur-xl">
+                          {ISSUE_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value} className="rounded-xl font-bold py-3 transition-colors">
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                 </div>
                 <div className="space-y-2">
@@ -116,13 +136,13 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
                   <Input
                     id="address"
                     {...register("address")}
-                    className="h-12 rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-bold"
+                    className="h-12 rounded-2xl bg-background/50 border-muted-foreground/10 focus-visible:ring-primary/20 font-bold px-4"
                     placeholder="Where is this occurring?"
                   />
                 </div>
               </div>
 
-              <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10 transition-all hover:bg-primary/10">
+              <div className="p-6 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/10 transition-all hover:bg-emerald-500/10">
                 <Controller
                   name="is_resolved"
                   control={control}
@@ -130,7 +150,7 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
                     <div className="flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <Label htmlFor="is_resolved" className="text-sm font-black cursor-pointer flex items-center gap-2">
-                          <CheckCircle2 className={("w-4 h-4", field.value ? "text-emerald-500" : "text-muted-foreground/50")} />
+                          <CheckCircle2 className={cn("w-4 h-4", field.value ? "text-emerald-500" : "text-muted-foreground/50")} />
                           Problem Solved?
                         </Label>
                         <p className="text-[10px] font-bold text-muted-foreground max-w-[200px]">Mark this as finished and inform the community.</p>

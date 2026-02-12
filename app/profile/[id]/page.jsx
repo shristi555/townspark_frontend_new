@@ -218,11 +218,16 @@ export default function UserProfilePage() {
                                             <Card className='group h-full overflow-hidden rounded-[2rem] border-0 bg-card/60 backdrop-blur-md hover:shadow-2xl transition-all hover:-translate-y-2 relative flex flex-col'>
                                                 {/* Issue Image */}
                                                 <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                                                    {issue.main_image || issue.images?.[0]?.image ? (
+                                                    {issue.main_image || (issue.images && issue.images.length > 0) ? (
                                                         <img
-                                                            src={issue.main_image?.startsWith('http') ? issue.main_image : (issue.main_image ? `${process.env.NEXT_PUBLIC_API_URL}${issue.main_image}` : `${process.env.NEXT_PUBLIC_API_URL}${issue.images?.[0]?.image}`)}
+                                                            src={
+                                                                (issue.main_image || issue.images[0].image).startsWith('http')
+                                                                    ? (issue.main_image || issue.images[0].image)
+                                                                    : `${process.env.NEXT_PUBLIC_API_URL}${issue.main_image || issue.images[0].image}`
+                                                            }
                                                             alt={issue.title}
                                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            loading="lazy"
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center opacity-20">
