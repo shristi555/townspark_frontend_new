@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
-import { Loader2 } from "lucide-react"
+import { Loader2, Pencil, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -130,7 +130,7 @@ export function EditIssueDialog({ issue, trigger, onUpdateSuccess }) {
                     <div className="flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <Label htmlFor="is_resolved" className="text-sm font-black cursor-pointer flex items-center gap-2">
-                          <CheckCircle2 className={cn("w-4 h-4", field.value ? "text-emerald-500" : "text-muted-foreground/50")} />
+                          <CheckCircle2 className={("w-4 h-4", field.value ? "text-emerald-500" : "text-muted-foreground/50")} />
                           Problem Solved?
                         </Label>
                         <p className="text-[10px] font-bold text-muted-foreground max-w-[200px]">Mark this as finished and inform the community.</p>
