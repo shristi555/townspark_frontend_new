@@ -32,7 +32,7 @@ export function AppNavbar() {
 					className='md:hidden'
 					onClick={toggleSidebar}
 				>
-					<Menu className='w-5 h-5' />
+					<Menu className='w-5 h-5' suppressHydrationWarning />
 				</Button>
 
 				{/* Logo / Title Area (Optional, currently just space) */}
@@ -48,7 +48,7 @@ export function AppNavbar() {
 						onClick={() => router.push("/search")}
 						title="Search"
 					>
-						<Search className='w-5 h-5' />
+						<Search className='w-5 h-5' suppressHydrationWarning />
 					</Button>
 
 					{/* Theme Toggle */}

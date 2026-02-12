@@ -35,17 +35,19 @@ export default function RootLayout({ children }) {
 		<html lang='en' suppressHydrationWarning>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+				suppressHydrationWarning
 			>
 				<ThemeProvider
 					attribute='class'
 					defaultTheme='system'
 					enableSystem
 					disableTransitionOnChange
+					suppressHydrationWarning
 				>
 					<AuthProvider>
 						<AppLayout suppressHydrationWarning>{children}</AppLayout>
 					</AuthProvider>
-					<Toaster />
+					<Toaster suppressHydrationWarning />
 				</ThemeProvider>
 			</body>
 		</html>

@@ -159,8 +159,14 @@ function IssueCard({ issue }) {
 						<div className='flex -space-x-2'>
 							<Link href={`/profile/${issue.reported_by_id}`} onClick={(e) => e.stopPropagation()}>
 								<Avatar className='w-6 h-6 border-2 border-white dark:border-zinc-900 ring-2 ring-primary/20 hover:scale-110 transition-transform cursor-pointer'>
+									{issue.reported_by_pic && (
+										<AvatarImage
+											src={issue.reported_by_pic.startsWith('http') ? issue.reported_by_pic : `${process.env.NEXT_PUBLIC_API_URL}${issue.reported_by_pic}`}
+											alt={issue.reported_by_name}
+										/>
+									)}
 									<AvatarFallback className='text-[10px] bg-primary text-white font-bold'>
-										{issue.reported_by?.[0]?.toUpperCase() || "U"}
+										{issue.reported_by_name?.[0]?.toUpperCase() || "U"}
 									</AvatarFallback>
 								</Avatar>
 							</Link>

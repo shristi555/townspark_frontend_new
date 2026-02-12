@@ -11,6 +11,7 @@ import {
 	LogOut,
 	Heart,
 } from "lucide-react";
+
 import {
 	Sidebar,
 	SidebarContent,
@@ -25,7 +26,7 @@ import {
 	SidebarRail,
 } from "@/components/ui/sidebar";
 import { NotificationBell } from "@/components/notification-bell";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -34,6 +35,8 @@ import logo from "@public/logo.png";
 import { toast } from "sonner";
 import useAuthStore from "@/store/auth_store";
 import { useEffect, useState } from "react";
+
+
 
 const mainNavItems = [
 	{
@@ -79,7 +82,7 @@ const secondaryNavItems = [
 export function AppSidebar() {
 	const pathname = usePathname();
 	const router = useRouter();
-	const { logout, getUserFullName, getUserEmail, getUserId } = useAuthStore();
+	const { logout, getUserFullName, getUserEmail, getUserId, getUserProfilePic } = useAuthStore();
 
 	async function handleLogout() {
 		logout();
@@ -191,18 +194,22 @@ export function AppSidebar() {
 
 				<Separator className='my-2' />
 
-				<div className='flex items-center gap-3 mb-3 px-2'>
-					<Avatar className='w-10 h-10'>
-						<AvatarFallback className='bg-primary/10 text-primary font-semibold'>
-							<User className='w-5 h-5' />
+				<div className='flex items-center gap-3 mb-3 p-2 rounded-2xl bg-muted/30 border border-border/50'>
+					<Avatar className='w-10 h-10 border-2 border-background shadow-sm'>
+						<AvatarImage
+							src={getUserProfilePic()?.startsWith('http') ? getUserProfilePic() : (getUserProfilePic() ? `${process.env.NEXT_PUBLIC_API_URL}${getUserProfilePic()}` : undefined)}
+							alt={getUserFullName()}
+						/>
+						<AvatarFallback className='bg-primary/10 text-primary font-black uppercase text-xs'>
+							{(getUserFullName() || "U")?.[0]}
 						</AvatarFallback>
 					</Avatar>
 					<div className='flex-1 min-w-0'>
-						<p className='font-semibold text-sm truncate uppercase'>
-							{getUserFullName() || "Guest User"}
+						<p className='font-bold text-sm truncate leading-none mb-1'>
+							{getUserFullName() || "Citizen"}
 						</p>
-						<p className='text-xs text-muted-foreground truncate'>
-							{getUserEmail() || (getUserId() ? `ID: ${getUserId()}` : "Not logged in")}
+						<p className='text-[10px] text-muted-foreground truncate font-bold opacity-60'>
+							{getUserEmail() || (getUserId() ? `ID: ${getUserId()}` : "Guest Account")}
 						</p>
 					</div>
 				</div>

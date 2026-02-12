@@ -450,7 +450,7 @@ export default function IssueDetails({
 								<Link href={`/profile/${issue.reported_by_id}`}>
 									<Avatar className='w-14 h-14 border-2 border-background shadow-xl hover:scale-105 transition-transform cursor-pointer'>
 										{issue.reported_by_pic ? (
-											<AvatarImage src={issue.reported_by_pic} alt={issue.reported_by_name || issue.reported_by} />
+											<AvatarImage src={issue.reported_by_pic?.startsWith('http') ? issue.reported_by_pic : `${process.env.NEXT_PUBLIC_API_URL}${issue.reported_by_pic}`} alt={issue.reported_by_name || issue.reported_by} />
 										) : null}
 										<AvatarFallback className='bg-muted text-muted-foreground font-black text-lg'>
 											{(issue.reported_by_name || issue.reported_by)?.[0]?.toUpperCase()}

@@ -29,6 +29,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
+
 // This is sample data.
 const data = {
   user: {
@@ -173,9 +174,9 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-            <SidebarMenuItem>
-                 <NotificationBell isSidebar />
-            </SidebarMenuItem>
+          <SidebarMenuItem>
+            <NotificationBell isSidebar />
+          </SidebarMenuItem>
         </SidebarMenu>
         <NavUser user={data.user} />
       </SidebarFooter>

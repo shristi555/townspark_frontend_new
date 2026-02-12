@@ -462,7 +462,7 @@ export default function SearchPage() {
                                                         <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-muted flex-shrink-0 border-2 border-background shadow-inner">
                                                             {issue.images?.[0] ? (
                                                                 <Image
-                                                                    src={`${process.env.NEXT_PUBLIC_API_URL}${issue.images[0].image}`}
+                                                                    src={issue.images[0].image?.startsWith('http') ? issue.images[0].image : `${process.env.NEXT_PUBLIC_API_URL}${issue.images[0].image}`}
                                                                     alt={issue.title}
                                                                     fill
                                                                     className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -488,7 +488,23 @@ export default function SearchPage() {
                                                             <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider pt-2">
                                                                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {issue.address?.split(',')[0]}</span>
                                                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {format(new Date(issue.created_at), "MMM d")}</span>
-                                                                <span className="flex items-center gap-1"><UserCircle className="w-3 h-3" /> {issue.reported_by_name?.split(' ')[0]}</span>
+                                                                <span className="flex items-center gap-1">
+                                                                    {issue.reported_by_pic ? (
+                                                                        <div className="w-4 h-4 rounded-full overflow-hidden border border-background">
+                                                                            <Image
+                                                                                src={issue.reported_by_pic.startsWith('http') ? issue.reported_by_pic : `${process.env.NEXT_PUBLIC_API_URL}${issue.reported_by_pic}`}
+                                                                                alt={issue.reported_by_name}
+                                                                                width={16}
+                                                                                height={16}
+                                                                                className="object-cover"
+                                                                                unoptimized
+                                                                            />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <UserCircle className="w-3 h-3" />
+                                                                    )}
+                                                                    {issue.reported_by_name?.split(' ')[0]}
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </CardContent>
@@ -517,30 +533,32 @@ export default function SearchPage() {
                                         type === 'person' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                                     )}>
                                         {results.people.map((person) => (
-                                            <Card key={person.id} className="rounded-2xl border-0 bg-card/40 backdrop-blur-sm hover:bg-card/80 transition-all">
-                                                <CardContent className="p-4 flex items-center gap-4">
-                                                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-primary/5 border-2 border-background">
-                                                        {person.profile_pic ? (
-                                                            <Image
-                                                                src={person.profile_pic}
-                                                                alt={person.full_name}
-                                                                fill
-                                                                className="object-cover"
-                                                                unoptimized
-                                                            />
-                                                        ) : (
-                                                            <UserCircle className="w-full h-full text-primary/20" />
-                                                        )}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <h4 className="font-black text-sm truncate">{person.full_name || person.email.split('@')[0]}</h4>
-                                                        <p className="text-[10px] text-muted-foreground font-bold truncate opacity-60">{person.email}</p>
-                                                    </div>
-                                                    <Button variant="ghost" size="icon" className="ml-auto rounded-full group">
-                                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                                    </Button>
-                                                </CardContent>
-                                            </Card>
+                                            <Link key={person.id} href={`/profile/${person.id}`}>
+                                                <Card className="rounded-2xl border-0 bg-card/40 backdrop-blur-sm hover:bg-card/80 hover:scale-[1.02] transition-all cursor-pointer">
+                                                    <CardContent className="p-4 flex items-center gap-4">
+                                                        <div className="relative w-12 h-12 rounded-full overflow-hidden bg-primary/5 border-2 border-background shadow-sm">
+                                                            {person.profile_pic ? (
+                                                                <Image
+                                                                    src={person.profile_pic?.startsWith('http') ? person.profile_pic : `${process.env.NEXT_PUBLIC_API_URL}${person.profile_pic}`}
+                                                                    alt={person.full_name}
+                                                                    fill
+                                                                    className="object-cover"
+                                                                    unoptimized
+                                                                />
+                                                            ) : (
+                                                                <UserCircle className="w-full h-full text-primary/20" />
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <h4 className="font-black text-sm truncate">{person.full_name || person.email?.split('@')[0]}</h4>
+                                                            <p className="text-[10px] text-muted-foreground font-bold truncate opacity-60 leading-none">{person.email}</p>
+                                                        </div>
+                                                        <Button variant="ghost" size="icon" className="ml-auto rounded-full group hover:bg-primary/10">
+                                                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                        </Button>
+                                                    </CardContent>
+                                                </Card>
+                                            </Link>
                                         ))}
                                     </div>
                                 </>
