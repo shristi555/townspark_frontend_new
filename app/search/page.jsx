@@ -357,45 +357,57 @@ export default function SearchPage() {
                                 </SelectContent>
                             </Select>
 
-                            {/* Date Range Popover */}
+                            {/* Min Date Picker */}
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="h-11 rounded-xl font-bold border-muted gap-2">
-                                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                                        {startDate ? (
-                                            endDate ? (
-                                                <span className="text-xs">
-                                                    {format(startDate, "MMM d")} - {format(endDate, "MMM d")}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs">{format(startDate, "MMM d")}</span>
-                                            )
-                                        ) : "Date Range"}
+                                    <Button variant="outline" className="h-11 rounded-xl font-bold border-muted gap-2 min-w-[140px] justify-start px-3">
+                                        <Calendar className="w-3.5 h-3.5 text-primary" />
+                                        <span className="text-xs truncate">
+                                            {startDate ? format(startDate, "MMM d, yyyy") : "Min Date"}
+                                        </span>
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
-                                    <div className="p-4 border-b bg-muted/20">
-                                        <h4 className="font-bold text-sm">Select Date Range</h4>
+                                    <div className="p-3 border-b bg-muted/20">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Filter From</p>
                                     </div>
                                     <CalendarComponent
+                                        mode="single"
+                                        selected={startDate}
+                                        onSelect={setStartDate}
                                         initialFocus
-                                        mode="range"
-                                        selected={{ from: startDate, to: endDate }}
-                                        onSelect={(range) => {
-                                            setStartDate(range?.from);
-                                            setEndDate(range?.to);
-                                        }}
-                                        className="rounded-b-2xl"
                                     />
-                                    {(startDate || endDate) && (
+                                    {startDate && (
                                         <div className="p-2 border-t">
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full text-xs font-bold text-destructive"
-                                                onClick={() => { setStartDate(null); setEndDate(null); }}
-                                            >
-                                                Reset Dates
-                                            </Button>
+                                            <Button variant="ghost" className="w-full text-[10px] font-black uppercase text-destructive h-8" onClick={() => setStartDate(null)}>Reset</Button>
+                                        </div>
+                                    )}
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Max Date Picker */}
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="h-11 rounded-xl font-bold border-muted gap-2 min-w-[140px] justify-start px-3">
+                                        <Clock className="w-3.5 h-3.5 text-primary" />
+                                        <span className="text-xs truncate">
+                                            {endDate ? format(endDate, "MMM d, yyyy") : "Max Date"}
+                                        </span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                                    <div className="p-3 border-b bg-muted/20">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Filter To</p>
+                                    </div>
+                                    <CalendarComponent
+                                        mode="single"
+                                        selected={endDate}
+                                        onSelect={setEndDate}
+                                        initialFocus
+                                    />
+                                    {endDate && (
+                                        <div className="p-2 border-t">
+                                            <Button variant="ghost" className="w-full text-[10px] font-black uppercase text-destructive h-8" onClick={() => setEndDate(null)}>Reset</Button>
                                         </div>
                                     )}
                                 </PopoverContent>
