@@ -304,7 +304,7 @@ export default function IssueCreateForm({
 		(e) => {
 			const files = Array.from(e.target.files || []);
 			if (images.length + files.length > MAX_IMAGES) {
-				toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+				alert(`Maximum ${MAX_IMAGES} images allowed`);
 				return;
 			}
 			setImages((prev) => [...prev, ...files]);
@@ -331,242 +331,56 @@ export default function IssueCreateForm({
 	);
 
 	return (
-		<form onSubmit={handleFormSubmit} className='space-y-10 pb-20'>
+		<form onSubmit={handleFormSubmit} className='space-y-6'>
 			<FormHeader />
 
-			<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-				<div className="lg:col-span-12">
-					{validationError?.general && (
-						<motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-							<Card className='border-destructive/20 bg-destructive/5 rounded-[2rem] overflow-hidden'>
-								<CardContent className='p-6 flex items-center gap-4'>
-									<div className="p-3 rounded-xl bg-destructive/10 text-destructive">
-										<AlertCircle className="w-6 h-6" />
-									</div>
-									<div className="flex-1">
-										<p className="text-xs font-black uppercase tracking-widest text-destructive/70">Submission Error</p>
-										<ErrorMessage message={validationError.general} />
-									</div>
-								</CardContent>
-							</Card>
-						</motion.div>
-					)}
-				</div>
+			{validationError?.general && (
+				<Card className='border-destructive/50 bg-destructive/5'>
+					<CardContent className='pt-6'>
+						<ErrorMessage message={validationError.general} />
+					</CardContent>
+				</Card>
+			)}
 
-				{/* Primary Info */}
-				<div className="lg:col-span-7 space-y-8">
-					<Card className='shadow-2xl border-0 bg-card/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden'>
-						<CardHeader className="bg-primary/5 border-b border-primary/10 py-10 px-8">
-							<CardTitle className="text-2xl font-black flex items-center gap-3">
-								<Send className="w-6 h-6 text-primary" />
-								Report Context
-							</CardTitle>
-							<p className="text-sm font-medium text-muted-foreground">Define what needs attention in your local area.</p>
-						</CardHeader>
-						<CardContent className='p-8 space-y-8'>
-							<div className='space-y-3'>
-								<Label htmlFor='category' className="text-[10px] font-black uppercase tracking-[0.2em] ml-2 opacity-50">Problem Type</Label>
-								<Select
-									name='category'
-									value={category}
-									onValueChange={setCategory}
-								>
-									<SelectTrigger
-										className={cn(
-											"h-14 rounded-2xl bg-background/50 border-muted-foreground/10 text-base font-bold transition-all hover:bg-background/80",
-											validationError?.category ? "border-destructive ring-2 ring-destructive/10" : ""
-										)}
-									>
-										<SelectValue placeholder='Select issue type' />
-									</SelectTrigger>
-									<SelectContent className="rounded-2xl border-border/50">
-										{ISSUE_CATEGORIES.map((cat) => (
-											<SelectItem key={cat.value} value={cat.value} className="rounded-xl font-bold py-3">
-												{cat.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								<input type='hidden' name='category' value={category} />
-								<ErrorMessage message={validationError?.category} />
-							</div>
+			<ImageUploadSection
+				images={images}
+				onImageUpload={handleImageUpload}
+				onImageRemove={removeImage}
+				error={validationError?.uploaded_images}
+			/>
 
-							<div className='space-y-3'>
-								<Label htmlFor='title' className="text-[10px] font-black uppercase tracking-[0.2em] ml-2 opacity-50">Short Headline</Label>
-								<Input
-									id='title'
-									name='title'
-									placeholder='Summarize the problem briefly...'
-									className={cn(
-										"h-14 rounded-2xl bg-background/50 border-muted-foreground/10 text-lg font-black tracking-tight transition-all hover:bg-background/80",
-										validationError?.title ? "border-destructive ring-2 ring-destructive/10" : ""
-									)}
-								/>
-								<ErrorMessage message={validationError?.title} />
-							</div>
+			<IssueDetailsSection
+				category={category}
+				onCategoryChange={setCategory}
+				errors={validationError}
+			/>
 
-							<div className='space-y-3'>
-								<Label htmlFor='description' className="text-[10px] font-black uppercase tracking-[0.2em] ml-2 opacity-50">Detailed Narrative</Label>
-								<Textarea
-									id='description'
-									name='description'
-									rows={6}
-									placeholder='Explain exactly what is happening, where, and what impact it has...'
-									className={cn(
-										"rounded-3xl bg-background/50 border-muted-foreground/10 text-base font-medium leading-relaxed transition-all hover:bg-background/80 resize-none p-5",
-										validationError?.description ? "border-destructive ring-2 ring-destructive/10" : ""
-									)}
-								/>
-								<ErrorMessage message={validationError?.description} />
-							</div>
-						</CardContent>
-					</Card>
+			<LocationSection
+				showPicker={showLocationPicker}
+				selectedLocation={selectedLocation}
+				onTogglePicker={() => setShowLocationPicker(true)}
+				onLocationSelect={setSelectedLocation}
+				onClearLocation={handleLocationClear}
+			/>
 
-					{/* Location Logic */}
-					<Card className='shadow-2xl border-0 bg-card/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden'>
-						<CardHeader className="py-8 px-8 border-b border-border/50">
-							<CardTitle className='flex items-center gap-3 text-xl font-black'>
-								<MapPin className='w-5 h-5 text-red-500' />
-								Precise Location
-							</CardTitle>
-						</CardHeader>
-						<CardContent className='p-8'>
-							{!showLocationPicker ? (
-								<div className="flex flex-col items-center justify-center py-10 text-center space-y-6 md:px-10">
-									<div className="p-8 rounded-full bg-red-500/10 text-red-500 animate-pulse">
-										<MapPin className="h-10 w-10" />
-									</div>
-									<div className="space-y-2">
-										<h4 className="text-lg font-black">Where is this happening?</h4>
-										<p className="text-sm font-medium text-muted-foreground opacity-70">Adding a precise location helps authorities respond faster by identifying the exact spot on our community map.</p>
-									</div>
-									<Button
-										type='button'
-										variant='outline'
-										className='h-12 px-8 rounded-2xl border-2 font-black shadow-lg shadow-red-500/5 hover:-translate-y-1 transition-all'
-										onClick={() => setShowLocationPicker(true)}
-									>
-										Tap to pick on map
-									</Button>
-								</div>
-							) : (
-								<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='space-y-6'>
-									<div className="rounded-[2.5rem] overflow-hidden border-2 border-border shadow-2xl bg-muted h-[400px]">
-										<LocationPicker
-											onLocationSelect={setSelectedLocation}
-											selectedLocation={selectedLocation}
-										/>
-									</div>
-									<div className="flex items-center justify-between px-2">
-										<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-											<div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-											GPS Coordinates Integrated
-										</div>
-										<Button
-											type='button'
-											variant='ghost'
-											size='sm'
-											className="font-black text-[10px] uppercase tracking-widest text-zinc-400 hover:text-red-500 transition-colors"
-											onClick={handleLocationClear}
-										>
-											Clear Mapping
-										</Button>
-									</div>
-								</motion.div>
-							)}
-						</CardContent>
-					</Card>
-				</div>
-
-				{/* Evidence Side */}
-				<div className="lg:col-span-5 space-y-8">
-					<Card className='shadow-2xl border-0 bg-card/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden sticky top-24'>
-						<CardHeader className="bg-zinc-900 dark:bg-zinc-800 text-white p-8">
-							<CardTitle className='flex items-center justify-between text-xl font-black'>
-								<div className="flex items-center gap-3">
-									<ImageIcon className='w-5 h-5 text-primary' />
-									Evidence Vault
-								</div>
-								<span className='text-[10px] font-black bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest'>
-									{images.length} / {MAX_IMAGES}
-								</span>
-							</CardTitle>
-						</CardHeader>
-						<CardContent className='p-8 space-y-8'>
-							<div className={cn(
-								'relative border-4 border-dashed rounded-[2.5rem] p-10 text-center transition-all group overflow-hidden',
-								'hover:bg-primary/5 hover:border-primary/50',
-								images.length > 0 ? "border-emerald-500/30" : "border-border"
-							)}>
-								<input
-									type='file'
-									id='image-upload'
-									multiple
-									accept='image/jpeg,image/jpg,image/png,image/webp'
-									onChange={handleImageUpload}
-									className='hidden'
-								/>
-								<label
-									htmlFor='image-upload'
-									className='cursor-pointer flex flex-col items-center gap-4 relative z-10'
-								>
-									<div className='w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-inner'>
-										<Upload className='w-10 h-10 text-primary' />
-									</div>
-									<div className="space-y-1">
-										<p className='text-lg font-black tracking-tight'>
-											Upload visuals
-										</p>
-										<p className='text-[11px] font-bold text-muted-foreground opacity-60 uppercase tracking-widest'>
-											Sync up to {MAX_IMAGES} images
-										</p>
-									</div>
-								</label>
-							</div>
-
-							<AnimatePresence>
-								{images.length > 0 && (
-									<motion.div
-										initial={{ opacity: 0, scale: 0.9 }}
-										animate={{ opacity: 1, scale: 1 }}
-										className='grid grid-cols-3 gap-4 pb-4'
-									>
-										{images.map((file, index) => (
-											<ImagePreview
-												key={index}
-												file={file}
-												onRemove={() => removeImage(index)}
-											/>
-										))}
-									</motion.div>
-								)}
-							</AnimatePresence>
-
-							<ErrorMessage message={validationError?.uploaded_images} />
-
-							<div className="pt-6 border-t border-border/50">
-								<Button
-									type='submit'
-									className='w-full h-16 rounded-[1.5rem] text-lg font-black shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95'
-									disabled={isSubmitting}
-								>
-									{isSubmitting ? (
-										<Loader2 className="w-6 h-6 animate-spin" />
-									) : (
-										<>
-											<Send className='w-5 h-5 mr-3' />
-											Broadcasting Sync
-										</>
-									)}
-								</Button>
-								<p className="text-[10px] text-center text-muted-foreground font-bold mt-4 opacity-50 uppercase tracking-widest">
-									By submitting, you agree to local reporting guidelines
-								</p>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
-			</div>
+			<Card className='shadow-lg'>
+				<CardContent className='pt-6'>
+					<Button
+						type='submit'
+						className='w-full h-12 text-base'
+						disabled={isSubmitting}
+					>
+						{isSubmitting ? (
+							"Submitting..."
+						) : (
+							<>
+								<Send className='w-4 h-4 mr-2' />
+								Submit Report
+							</>
+						)}
+					</Button>
+				</CardContent>
+			</Card>
 		</form>
 	);
 }
