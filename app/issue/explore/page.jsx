@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { useRouter } from "next/navigation";
 
 async function exploreIssue(page = 1, page_size = 10, params = {}) {
 	try {
@@ -64,10 +65,17 @@ async function exploreIssue(page = 1, page_size = 10, params = {}) {
 }
 
 function IssueCard({ issue }) {
+	const router = useRouter();
 	const firstImage =
 		issue.images && issue.images.length > 0
 			? (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '') + issue.images[0].image
 			: null;
+
+	const handleCardClick = (e) => {
+		// Prevent navigation if clicking on interactive elements
+		if (e.target.closest('a') || e.target.closest('button')) return;
+		router.push(`/issue/details/${issue.id}`);
+	};
 
 	return (
 		<motion.div
@@ -77,104 +85,105 @@ function IssueCard({ issue }) {
 			exit={{ opacity: 0, scale: 0.95 }}
 			transition={{ duration: 0.3 }}
 		>
-			<Link href={`/issue/details/${issue.id}`}>
-				<Card className='group h-full flex flex-col overflow-hidden border-border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer rounded-2xl'>
-					{/* Image Overlay Header */}
-					<div className='relative h-56 overflow-hidden'>
-						{firstImage ? (
-							<img
-								src={firstImage}
-								alt={issue.title}
-								className='object-cover w-full h-full transition-transform duration-700 group-hover:scale-110'
-								loading='lazy'
-							/>
-						) : (
-							<div className='w-full h-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400'>
-								<IoMdImages className='text-4xl opacity-50' />
+			<Card
+				onClick={handleCardClick}
+				className='group h-full flex flex-col overflow-hidden border-border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer rounded-2xl'
+			>
+				{/* Image Overlay Header */}
+				<div className='relative h-56 overflow-hidden'>
+					{firstImage ? (
+						<img
+							src={firstImage}
+							alt={issue.title}
+							className='object-cover w-full h-full transition-transform duration-700 group-hover:scale-110'
+							loading='lazy'
+						/>
+					) : (
+						<div className='w-full h-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400'>
+							<IoMdImages className='text-4xl opacity-50' />
+						</div>
+					)}
+					{/* Badges Overlay */}
+					<div className='absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none'>
+						<Badge className={cn(
+							"px-3 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg border-0",
+							issue.is_resolved
+								? "bg-emerald-500 text-white"
+								: "bg-amber-500 text-white"
+						)}>
+							{issue.is_resolved ? (
+								<BsCheckCircle className='mr-1.5 h-3 w-3' />
+							) : (
+								<BsCircle className='mr-1.5 h-3 w-3' />
+							)}
+							{issue.is_resolved ? "Resolved" : "Open"}
+						</Badge>
+						<Badge variant="secondary" className={cn("backdrop-blur-md border-0 shadow-lg px-2 py-1", CATEGORY_COLORS[issue.category.toLowerCase()] || "bg-white/20 dark:bg-black/20 text-white")}>
+							{issue.category}
+						</Badge>
+					</div>
+				</div>
+
+				<CardHeader className='p-5 pb-2'>
+					<div className='flex items-start justify-between gap-3'>
+						<div className='space-y-1 min-w-0'>
+							<h3 className='font-bold text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2'>
+								{issue.title}
+							</h3>
+						</div>
+					</div>
+				</CardHeader>
+
+				<CardContent className='px-5 flex-1'>
+					<p className='text-sm text-muted-foreground line-clamp-3 mb-4 min-h-[4.5rem]'>
+						{issue.description}
+					</p>
+					<div className='flex flex-col gap-2'>
+						<div className='flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-500'>
+							<FaMapMarkerAlt className='text-primary/70 shrink-0' />
+							<span className='truncate'>{issue.address}</span>
+						</div>
+						<div className='flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-500'>
+							<BsCalendar3 className='shrink-0' />
+							<span>{formatDistanceToNow(new Date(issue.created_at), { addSuffix: true })}</span>
+						</div>
+					</div>
+				</CardContent>
+
+				<div className='px-5 py-4 mt-auto border-t border-border flex items-center justify-between'>
+					<div className='flex items-center gap-4'>
+						<div className='flex items-center gap-1.5 group/stat'>
+							<div className='p-1.5 rounded-full bg-primary/5 group-hover/stat:bg-primary/10 transition-colors'>
+								<FaRegThumbsUp className='text-xs text-primary' />
 							</div>
-						)}
-						{/* Badges Overlay */}
-						<div className='absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none'>
-							<Badge className={cn(
-								"px-3 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg border-0",
-								issue.is_resolved
-									? "bg-emerald-500 text-white"
-									: "bg-amber-500 text-white"
-							)}>
-								{issue.is_resolved ? (
-									<BsCheckCircle className='mr-1.5 h-3 w-3' />
-								) : (
-									<BsCircle className='mr-1.5 h-3 w-3' />
+							<span className='text-xs font-semibold'>{issue.likes_count}</span>
+						</div>
+						<div className='flex items-center gap-1.5 group/stat'>
+							<div className='p-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 group-hover/stat:bg-zinc-200 dark:group-hover/stat:bg-zinc-700 transition-colors'>
+								<FaRegCommentDots className='text-xs text-zinc-500' />
+							</div>
+							<span className='text-xs font-semibold text-zinc-500'>{issue.comments_count}</span>
+						</div>
+					</div>
+
+					<div className='flex -space-x-2'>
+						<Link href={`/profile/${issue.reported_by_id}`} onClick={(e) => e.stopPropagation()}>
+							<Avatar className='w-6 h-6 border-2 border-white dark:border-zinc-900 ring-2 ring-primary/20 hover:scale-110 transition-transform cursor-pointer'>
+								{issue.reported_by_pic && (
+									<AvatarImage
+										src={issue.reported_by_pic.startsWith('http') ? issue.reported_by_pic : `${process.env.NEXT_PUBLIC_API_URL}${issue.reported_by_pic}`}
+										alt={issue.reported_by_name}
+									/>
 								)}
-								{issue.is_resolved ? "Resolved" : "Open"}
-							</Badge>
-							<Badge variant="secondary" className={cn("backdrop-blur-md border-0 shadow-lg px-2 py-1", CATEGORY_COLORS[issue.category.toLowerCase()] || "bg-white/20 dark:bg-black/20 text-white")}>
-								{issue.category}
-							</Badge>
-						</div>
+								<AvatarFallback className='text-[10px] bg-primary text-white font-bold'>
+									{issue.reported_by_name?.[0]?.toUpperCase() || "U"}
+								</AvatarFallback>
+							</Avatar>
+						</Link>
 					</div>
-
-					<CardHeader className='p-5 pb-2'>
-						<div className='flex items-start justify-between gap-3'>
-							<div className='space-y-1 min-w-0'>
-								<h3 className='font-bold text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2'>
-									{issue.title}
-								</h3>
-							</div>
-						</div>
-					</CardHeader>
-
-					<CardContent className='px-5 flex-1'>
-						<p className='text-sm text-muted-foreground line-clamp-3 mb-4 min-h-[4.5rem]'>
-							{issue.description}
-						</p>
-						<div className='flex flex-col gap-2'>
-							<div className='flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-500'>
-								<FaMapMarkerAlt className='text-primary/70 shrink-0' />
-								<span className='truncate'>{issue.address}</span>
-							</div>
-							<div className='flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-500'>
-								<BsCalendar3 className='shrink-0' />
-								<span>{formatDistanceToNow(new Date(issue.created_at), { addSuffix: true })}</span>
-							</div>
-						</div>
-					</CardContent>
-
-					<div className='px-5 py-4 mt-auto border-t border-border flex items-center justify-between'>
-						<div className='flex items-center gap-4'>
-							<div className='flex items-center gap-1.5 group/stat'>
-								<div className='p-1.5 rounded-full bg-primary/5 group-hover/stat:bg-primary/10 transition-colors'>
-									<FaRegThumbsUp className='text-xs text-primary' />
-								</div>
-								<span className='text-xs font-semibold'>{issue.likes_count}</span>
-							</div>
-							<div className='flex items-center gap-1.5 group/stat'>
-								<div className='p-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 group-hover/stat:bg-zinc-200 dark:group-hover/stat:bg-zinc-700 transition-colors'>
-									<FaRegCommentDots className='text-xs text-zinc-500' />
-								</div>
-								<span className='text-xs font-semibold text-zinc-500'>{issue.comments_count}</span>
-							</div>
-						</div>
-
-						<div className='flex -space-x-2'>
-							<Link href={`/profile/${issue.reported_by_id}`} onClick={(e) => e.stopPropagation()}>
-								<Avatar className='w-6 h-6 border-2 border-white dark:border-zinc-900 ring-2 ring-primary/20 hover:scale-110 transition-transform cursor-pointer'>
-									{issue.reported_by_pic && (
-										<AvatarImage
-											src={issue.reported_by_pic.startsWith('http') ? issue.reported_by_pic : `${process.env.NEXT_PUBLIC_API_URL}${issue.reported_by_pic}`}
-											alt={issue.reported_by_name}
-										/>
-									)}
-									<AvatarFallback className='text-[10px] bg-primary text-white font-bold'>
-										{issue.reported_by_name?.[0]?.toUpperCase() || "U"}
-									</AvatarFallback>
-								</Avatar>
-							</Link>
-						</div>
-					</div>
-				</Card>
-			</Link>
-		</motion.div>
+				</div>
+			</Card>
+		</motion.div >
 	);
 }
 
