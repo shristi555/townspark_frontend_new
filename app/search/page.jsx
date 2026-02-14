@@ -122,14 +122,17 @@ function SearchContent() {
 
         setSearching(true);
         try {
-            const params = {
-                q: query,
-                type,
-                category,
-                start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
-                end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
-                status: statusFilter !== "all" ? statusFilter : null
-            };
+            // Build params object and filter out null/undefined values
+            const params = {};
+            if (query) params.q = query;
+            if (type && type !== "all") params.type = type;
+            if (category && category !== "all") params.category = category;
+            if (startDate) params.start_date = format(startDate, "yyyy-MM-dd");
+            if (endDate) params.end_date = format(endDate, "yyyy-MM-dd");
+            if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+
+            console.log("Search params:", params); // Debug log
+
             const response = await DiscoveryService.search(params);
             if (response.success) {
                 setResults(response.response);
@@ -561,7 +564,7 @@ function SearchContent() {
                                             <Link key={person.id} href={`/profile/${person.id}`}>
                                                 <Card className="rounded-2xl border-0 bg-card/40 backdrop-blur-sm hover:bg-card/80 hover:scale-[1.02] transition-all cursor-pointer">
                                                     <CardContent className="p-4 flex items-center gap-4">
-                                                        <div className="relative w-12 h-12 rounded-full overflow-hidden bg-primary/5 border-2 border-background shadow-sm">
+                                                        <div className="relative w-12 h-12 rounded-full overflow-hidden bg-primary/10 border-2 border-background shadow-sm flex items-center justify-center">
                                                             {person.profile_pic ? (
                                                                 <Image
                                                                     src={person.profile_pic?.startsWith('http') ? person.profile_pic : `${process.env.NEXT_PUBLIC_API_URL}${person.profile_pic}`}
@@ -571,7 +574,12 @@ function SearchContent() {
                                                                     unoptimized
                                                                 />
                                                             ) : (
-                                                                <UserCircle className="w-full h-full text-primary/20" />
+                                                                <span className="text-primary font-bold text-lg">
+                                                                    {person.full_name ?
+                                                                        person.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) :
+                                                                        person.email?.charAt(0).toUpperCase()
+                                                                    }
+                                                                </span>
                                                             )}
                                                         </div>
                                                         <div className="min-w-0">

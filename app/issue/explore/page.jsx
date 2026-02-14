@@ -236,10 +236,8 @@ export default function ExplorePage() {
 		[pageSize]
 	);
 
-	// Fetch base data (infinite scroll)
+	// Fetch base data (infinite scroll) - only sortBy affects backend
 	useEffect(() => {
-		// Only trigger reset/initial fetch when SortBy changes
-		// Search and Category are now local!
 		const filters = {};
 		if (sortBy) filters.ordering = sortBy === "newest" ? "-created_at" : "created_at";
 
