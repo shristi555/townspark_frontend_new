@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "@public/logo.png";
+import logo from "@public/townspark_logo.png";
 import { useRouter } from "next/navigation";
 
 const navigation = [

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { LoginForm } from "@/components/login-form";
-import logo from "@public/logo.png";
+import logo from "@public/townspark_logo.png";
 import React, { Suspense } from "react";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -51,7 +51,7 @@ function LoginContent() {
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 font-medium">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground p-1">
+            <div className="flex h-8 w-8 items-center justify-center">
               <Image src={logo} alt="Logo" width={24} height={24} />
             </div>
             <span className="font-bold text-xl tracking-tight">Townspark</span>

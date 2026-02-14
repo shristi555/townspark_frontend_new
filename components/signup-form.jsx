@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import logo from "@public/logo.png";
+import logo from "@public/townspark_logo.png";
 import Image from "next/image";
 
 function Logo(props) {

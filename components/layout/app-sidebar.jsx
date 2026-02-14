@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "@public/logo.png";
+import logo from "@public/townspark_logo.png";
 import { toast } from "sonner";
 import useAuthStore from "@/store/auth_store";
 import { useEffect, useState } from "react";
