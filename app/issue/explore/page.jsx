@@ -443,8 +443,8 @@ export default function ExplorePage() {
 						Discover Issues ({filteredIssues.length})
 					</h2>
 					<div className='flex items-center gap-2'>
-						<div className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse' />
-						<span className='text-xs font-medium text-emerald-600 dark:text-emerald-500'>Local filter active</span>
+						{/* <div className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse' />
+						<span className='text-xs font-medium text-emerald-600 dark:text-emerald-500'>Local filter active</span> */}
 					</div>
 				</div>
 
