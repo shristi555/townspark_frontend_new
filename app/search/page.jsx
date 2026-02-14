@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import {
     Search,
     User,
@@ -48,6 +48,18 @@ import { useSearchParams } from "next/navigation";
 const SEARCH_HISTORY_KEY = "townspark_search_history";
 
 export default function SearchPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            </div>
+        }>
+            <SearchContent />
+        </Suspense>
+    );
+}
+
+function SearchContent() {
     const searchParams = useSearchParams();
     const [query, setQuery] = useState(searchParams.get("q") || "");
     const [suggestions, setSuggestions] = useState([]);
@@ -56,6 +68,7 @@ export default function SearchPage() {
     const [searching, setSearching] = useState(false);
     const [searchHistory, setSearchHistory] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+
 
     // Filters
     const [type, setType] = useState("all");
