@@ -33,7 +33,7 @@ export function LoginForm({ className, ...props }) {
           <Input
             id="email"
             type="email"
-            placeholder="unknown@gmail.com"
+            placeholder="gwen@gmail.com"
             name="email"
             required
           />
